@@ -43,6 +43,8 @@ directionalLight.castShadow = true;
 // Shadow Map resolution configuration
 directionalLight.shadow.mapSize.width = 1024;
 directionalLight.shadow.mapSize.height = 1024;
+directionalLight.shadow.camera.near = 0.5;
+directionalLight.shadow.camera.far = 40;
 directionalLight.shadow.camera.left = -10;
 directionalLight.shadow.camera.right = 10;
 directionalLight.shadow.camera.top = 10;
@@ -100,7 +102,7 @@ const clock = new THREE.Clock();
 function animate() {
   requestAnimationFrame(animate);
 
-  const delta = clock.getDelta();
+  const delta = Math.min(clock.getDelta(), 0.1);
 
   // Rotate the cube on multiple axes for a full flat-shaded 3D look (scaled by delta time)
   cube.rotation.x += 0.6 * delta;
