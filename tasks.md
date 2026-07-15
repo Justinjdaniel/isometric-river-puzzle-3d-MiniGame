@@ -10,7 +10,7 @@ This file tracks the completion progress of the **Isometric River Crossing Puzzl
 
 ---
 
-## 1. Environment Setup & Project Boilerplate (Current Phase)
+## 1. Environment Setup & Project Boilerplate
 
 - [x] **Task 1: Project Initialization & Package Manager**
   - **Description**: Initialize the project directory with `package.json` utilizing pnpm v11. Install `three` and `vite` dependencies.
@@ -34,5 +34,29 @@ This file tracks the completion progress of the **Isometric River Crossing Puzzl
 
 - [x] **Task 5: Main Entry Point & Spinning Cube Scene**
   - **Description**: Implement a standard Three.js render loop in `src/main.js` featuring a faceted low-poly style spinning cube (`MeshStandardMaterial` with `flatShading: true`), directional/ambient lighting, and window resize listeners.
+  - **Assignee**: Sub-Agent
+  - **Status**: `[Done]` (Verified by Jules)
+
+---
+
+## 2. Headless State Machine & Testing Suite
+
+- [x] **Task 6: Define Core Constants**
+  - **Description**: Export key constants such as hex colors, boat speed, and layout coordinates in `src/core/constants.js`.
+  - **Assignee**: Sub-Agent
+  - **Status**: `[Done]` (Verified by Jules)
+
+- [x] **Task 7: Setup Vitest Unit Testing Framework**
+  - **Description**: Install `vitest` with `pnpm` as a devDependency and update `package.json` with a test script.
+  - **Assignee**: Sub-Agent
+  - **Status**: `[Done]` (Verified by Jules)
+
+- [x] **Task 8: Implement Headless State Machine**
+  - **Description**: Write the `GameState` class in `src/core/state.js` that tracks actor positions, boat state, passenger loading rules, movement criteria, and rule evaluation.
+  - **Assignee**: Sub-Agent
+  - **Status**: `[Done]` (Verified by Jules)
+
+- [x] **Task 9: Write Robust Unit Tests**
+  - **Description**: Write extensive unit tests in `src/core/state.test.js` validating rules, bounds, win conditions, and game over states.
   - **Assignee**: Sub-Agent
   - **Status**: `[Done]` (Verified by Jules)

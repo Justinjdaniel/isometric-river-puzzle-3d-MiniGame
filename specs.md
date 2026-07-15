@@ -15,28 +15,31 @@ This document establishes the architectural, visual, and behavioral specificatio
 
 ## 2. State Machine Requirements
 
-The puzzle follows the classic river crossing riddle (Shepherd, Two Sheep, and Fox).
+The puzzle follows the classic river crossing riddle (Shepherd/Man, Two Sheep, and Fox) using a boat.
 - **Rules**:
-  - The shepherd is the only one who can navigate the kayak.
-  - The kayak can hold the shepherd and at most one animal (sheep or fox).
-  - If the shepherd is on the opposite bank/kayak:
-    - A Sheep and the Fox cannot be left alone on a bank (Fox eats Sheep).
-    - Two Sheep cannot be left alone on a bank? Wait, the classical riddle is: Shepherd, Wolf, Goat, Cabbage.
-      Here, the riddle says: "Help the shepherd transport two sheep and a fox across a moving low-poly river using a single kayak!".
-      Wait, let's look at the rules for "two sheep and a fox":
-      - If a fox and a sheep are left alone, the fox eats the sheep.
-      - Are there other constraints? If there are two sheep and one fox, and the fox is left with one sheep (or two), the fox eats a sheep if unattended.
-      - Let's specify: Fox eats Sheep if the Shepherd is not present. If there are two sheep and one fox, and the shepherd is on the other side:
-        - If Left Bank has Fox and Sheep (and Shepherd is on Right or Kayak), Fox eats Sheep.
-        - If Left Bank has Fox and 2 Sheep, does Fox eat Sheep? Yes, because Fox is unattended with Sheep.
-        - So anytime the Fox is on a bank with any number of Sheep (1 or 2) and the Shepherd is NOT on that bank, it's a fail condition (Fox eats Sheep).
-  - **State Representation**:
-    - `shepherdBank`: `'left'` | `'right'` | `'kayak'`
-    - `kayakBank`: `'left'` | `'right'`
-    - `kayakPassenger`: `null` | `'sheep1'` | `'sheep2'` | `'fox'`
-    - `leftBank`: Array of animals `['sheep1', 'sheep2', 'fox']` (initially)
-    - `rightBank`: Array of animals (initially empty)
-    - `gameStatus`: `'playing'` | `'won'` | `'failed'` | `'animating'`
+  - The boat capacity limit is exactly 2.
+  - The shepherd ('man') must ALWAYS be on the boat to move it.
+  - The remaining 1 spot on the boat can contain either 'fox', 'sheep1', 'sheep2', or remain empty.
+  - An actor (including the 'man') is considered "present" on a bank if:
+    * Their location is physically on that bank (e.g., 'left'), OR
+    * Their location is 'boat' AND the boat is currently docked at that bank.
+  - A game-over state occurs if the 'man' is "away" from a bank (not present on that bank), and both the 'fox' and at least one 'sheep' ('sheep1' or 'sheep2') are present on that same bank.
+  - Leaving 'sheep1' and 'sheep2' alone together on a bank is perfectly safe.
+  - All movements and state changes are instantaneous and synchronous in the headless engine.
+
+- **Core API Methods**:
+  - `loadToBoat(actor)`: Safely boards an actor from their current bank. Returns `true` on success, `false` on failure.
+  - `unloadFromBoat(actor)`: Unloads an actor to the boat's current bank. Returns `true` on success, `false` on failure.
+  - `moveBoat()`: Triggers bank transition if the 'man' is on board. Returns `true` on success, `false` on failure.
+  - `checkRules()`: Evaluates the current layout and returns:
+    - `'victory'`: If all 4 actors are safe on 'right'.
+    - `'game_over_fox_ate_sheep'`: If the 'man' is away and 'fox' is present with at least one sheep on the same bank.
+    - `'playing'`: If the current setup is valid and the game is ongoing.
+  - `reset()`: Resets all values back to default starting conditions (all actors and boat on 'left' bank).
+
+- **State Representation**:
+  - `actorPositions`: Object mapping `'man'`, `'fox'`, `'sheep1'`, `'sheep2'` to `'left'`, `'boat'`, or `'right'`.
+  - `boatLocation`: `'left'` or `'right'`.
 
 ## 3. Aesthetic Style
 
