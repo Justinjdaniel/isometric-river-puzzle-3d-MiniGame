@@ -24,7 +24,7 @@ export function createTree(scale = 1.0) {
 
   // 2. Foliage (Stacked green cones)
   const foliageMaterial = new THREE.MeshStandardMaterial({
-    color: COLORS.BANK_LAND - 0x112211, // Slightly darker rich forest green
+    color: 0x496d24, // Rich forest green (safe hex value)
     flatShading: true,
     roughness: 0.85
   });
@@ -511,6 +511,7 @@ export function createSheep(scaleModifier = 1.0, rotationOffset = 0.0) {
   // Apply scaling modifier and initial rotation offset
   group.scale.set(scaleModifier, scaleModifier, scaleModifier);
   group.rotation.y = rotationOffset;
+  group.userData.rotationOffset = rotationOffset;
 
   return group;
 }

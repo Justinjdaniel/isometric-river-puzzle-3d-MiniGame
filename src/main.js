@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { setupScene } from './render/scene.js';
 import { createTree, createKayak, createShepherd, createFox, createSheep } from './render/assets.js';
-import { animateWater, updateAnimations, setupKeyboardControls } from './render/animation.js';
+import { animateWater, updateAnimations, setupKeyboardControls, resetAnimations } from './render/animation.js';
 import { GameState } from './core/state.js';
 import { DEVELOPER_MODE } from './core/constants.js';
 import './style.css';
@@ -150,6 +150,7 @@ function updateUIOverlay() {
   if (resetBtn) {
     resetBtn.addEventListener('click', () => {
       gameState.reset();
+      resetAnimations();
       updateUIOverlay();
     });
   }

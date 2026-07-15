@@ -2,16 +2,13 @@ import * as THREE from 'three';
 import { BOUNDS, POSITIONS, BOAT_SEATS, getBankPosition, DEVELOPER_MODE, SPEED } from '../core/constants.js';
 
 // Track animation states for actors
-// Each actor can have: { startPos: Vector3, progress: number, animating: boolean, prevLocation: string }
+// Each actor can have: { startPos: Vector3, startRotY: number, progress: number, animating: boolean, prevLocation: string }
 const actorAnims = {
-  man: { startPos: new THREE.Vector3(), progress: 1.0, animating: false, prevLocation: 'left' },
-  fox: { startPos: new THREE.Vector3(), progress: 1.0, animating: false, prevLocation: 'left' },
-  sheep1: { startPos: new THREE.Vector3(), progress: 1.0, animating: false, prevLocation: 'left' },
-  sheep2: { startPos: new THREE.Vector3(), progress: 1.0, animating: false, prevLocation: 'left' }
+  man: { startPos: new THREE.Vector3(), startRotY: 0, progress: 1.0, animating: false, prevLocation: 'left' },
+  fox: { startPos: new THREE.Vector3(), startRotY: 0, progress: 1.0, animating: false, prevLocation: 'left' },
+  sheep1: { startPos: new THREE.Vector3(), startRotY: 0, progress: 1.0, animating: false, prevLocation: 'left' },
+  sheep2: { startPos: new THREE.Vector3(), startRotY: 0, progress: 1.0, animating: false, prevLocation: 'left' }
 };
-
-// Target positions for meshes to assist in smooth lerps
-const boatTargetX = { value: POSITIONS.BOAT_DOCK_LEFT.x };
 
 /**
  * CPU-based water plane vertex wave displacement.
@@ -41,7 +38,6 @@ export function animateWater(waterMesh, elapsedTime) {
   }
 
   posAttr.needsUpdate = true;
-  geom.computeVertexNormals();
 }
 
 /**
@@ -86,6 +82,7 @@ export function updateAnimations(delta, elapsedTime, boatMesh, actorMeshes, game
     if (currentLocation !== animState.prevLocation) {
       // Store current physical world position as the animation start position
       mesh.getWorldPosition(animState.startPos);
+      animState.startRotY = mesh.rotation.y;
       animState.progress = 0.0;
       animState.animating = true;
       animState.prevLocation = currentLocation;
@@ -93,6 +90,8 @@ export function updateAnimations(delta, elapsedTime, boatMesh, actorMeshes, game
 
     // Get final target world coordinate for this actor
     let targetX = 0, targetY = 0, targetZ = 0;
+    let targetRotY = 0;
+    const rotationOffset = mesh.userData.rotationOffset || 0;
 
     if (currentLocation === 'boat') {
       // Position inside the boat (relative to boat's current position)
@@ -101,12 +100,14 @@ export function updateAnimations(delta, elapsedTime, boatMesh, actorMeshes, game
       targetX = boatMesh.position.x + seatOffset.x;
       targetY = boatMesh.position.y + seatOffset.y;
       targetZ = boatMesh.position.z + seatOffset.z;
+      targetRotY = actor === 'man' ? Math.PI / 2 : -Math.PI / 2; // Face forward in kayak
     } else {
       // Position on the respective land bank
       const bankPos = getBankPosition(actor, currentLocation);
       targetX = bankPos.x;
       targetY = bankPos.y;
       targetZ = bankPos.z;
+      targetRotY = (currentLocation === 'left' ? 0 : Math.PI) + rotationOffset;
     }
 
     if (animState.animating) {
@@ -124,8 +125,8 @@ export function updateAnimations(delta, elapsedTime, boatMesh, actorMeshes, game
 
       mesh.position.set(currentX, arcY, currentZ);
 
-      // Rotate slightly during jumping to make it look playful
-      mesh.rotation.y = THREE.MathUtils.lerp(0, Math.PI * 2, t) + (actor === 'sheep2' ? 0.3 : 0);
+      // Smoothly interpolate to target rotation and add a playful spin in the middle
+      mesh.rotation.y = THREE.MathUtils.lerp(animState.startRotY || 0, targetRotY, t) + Math.sin(t * Math.PI) * Math.PI * 2;
 
       if (t >= 1.0) {
         animState.animating = false;
@@ -133,17 +134,20 @@ export function updateAnimations(delta, elapsedTime, boatMesh, actorMeshes, game
     } else {
       // No active animation, lock position to exact targets
       mesh.position.set(targetX, targetY, targetZ);
-
-      // Face forward/symmetrical alignment on banks, or align with boat orientation
-      if (currentLocation === 'boat') {
-        mesh.rotation.y = actor === 'man' ? Math.PI / 2 : -Math.PI / 2; // Face forward in kayak
-      } else {
-        // Look slightly towards center
-        mesh.rotation.y = currentLocation === 'left' ? 0 : Math.PI;
-        // Keep lamb rotation offset
-        if (actor === 'sheep2') mesh.rotation.y += 0.45;
-      }
+      mesh.rotation.y = targetRotY;
     }
+  });
+}
+
+/**
+ * Resets all actor animation states to their default starting values.
+ */
+export function resetAnimations() {
+  Object.keys(actorAnims).forEach(actor => {
+    actorAnims[actor].progress = 1.0;
+    actorAnims[actor].animating = false;
+    actorAnims[actor].prevLocation = 'left';
+    actorAnims[actor].startRotY = 0;
   });
 }
 
