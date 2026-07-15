@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import './style.css';
 
 // 1. Scene Setup
 const scene = new THREE.Scene();
@@ -6,7 +7,7 @@ const scene = new THREE.Scene();
 scene.background = new THREE.Color('#0b0e14');
 
 // 2. Camera Setup (Orthographic Camera for Isometric Projection)
-const aspect = window.innerWidth / window.innerHeight;
+const aspect = window.innerWidth / (window.innerHeight || 1);
 const d = 5; // View size factor
 const camera = new THREE.OrthographicCamera(
   -d * aspect, d * aspect,
@@ -81,7 +82,7 @@ scene.add(plane);
 // 6. Window Resize Handler
 window.addEventListener('resize', () => {
   const width = window.innerWidth;
-  const height = window.innerHeight;
+  const height = window.innerHeight || 1;
   const newAspect = width / height;
 
   // Update Orthographic Camera bounds
@@ -100,6 +101,7 @@ window.addEventListener('resize', () => {
 const clock = new THREE.Clock();
 
 function animate() {
+  if (!container) return;
   requestAnimationFrame(animate);
 
   const delta = Math.min(clock.getDelta(), 0.1);
