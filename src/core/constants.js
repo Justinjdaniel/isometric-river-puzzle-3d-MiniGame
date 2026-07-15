@@ -3,18 +3,18 @@
 export const DEVELOPER_MODE = true; // Set to false to lock characters in place for Step 4
 
 export const COLORS = {
-  WATER: 0x156289,
-  BANK_LAND: 0x5a8f35,      // Vibrant meadow green
-  EARTH_DARK: 0x4d3319,     // Dark earthy block sides
-  DOCK_WOOD: 0x8b5a2b,      // Rustic wooden docks
-  BOAT: 0xcc6600,           // Stylized orange kayak/canoe
-  MAN: 0x1a4a6e,            // Blue shepherd robes/hat
-  FOX: 0xe65c00,            // Low-poly orange fox
-  SHEEP: 0xe6e6e6,          // White sheep wool
-  SKY_AMBIENT: 0xbfd2e6,
-  SUNLIGHT: 0xfffcf0,       // Warm sunlight
-  MOUNTAIN: 0x4a5a54,       // Dark green/grey mountain peaks
-  SHADOW: 0x111c24          // Shadow color/dark backdrop
+  WATER: 0x33EEFF,          // Clear turquoise water
+  BANK_LAND: 0x55CC55,      // Vibrant, sunlit green meadow
+  EARTH_DARK: 0x8B5A2B,     // Lighter, warm-toned earthy block sides
+  DOCK_WOOD: 0xA0522D,      // Rich wooden docks
+  BOAT: 0xFF7700,           // Vibrant stylized orange kayak/canoe
+  MAN: 0x1e6fba,            // Lighter bright shepherd robes/hat
+  FOX: 0xFF5500,            // Bright orange/red fox
+  SHEEP: 0xFFFFFF,          // Fluffy white sheep wool
+  SKY_AMBIENT: 0xE0F7FA,    // Bright sky ambient (light turquoise/cyan tint)
+  SUNLIGHT: 0xFFFCEB,       // Bright, warm sunlight
+  MOUNTAIN: 0x6E8B3D,       // Sunny green/grey mountain peaks
+  SHADOW: 0xE0F7FA          // Set background/backdrop to match bright sky ambient tint
 };
 
 export const SPEED = {
@@ -51,10 +51,15 @@ export function getBankPosition(actor, bank) {
   }
 }
 
-// When inside the boat, positions relative to the boat coordinate
+// When inside the boat, positions relative to the boat coordinate (aligned along Z-axis)
 export const BOAT_SEATS = {
-  seat1: { x: -0.35, y: 0.1, z: 0.0 }, // Front seat
-  seat2: { x: 0.35, y: 0.1, z: 0.0 }   // Back seat
+  seat1: { x: 0.0, y: 0.1, z: -0.35 }, // Front seat
+  seat2: { x: 0.0, y: 0.1, z: 0.35 }   // Back seat
+};
+
+// Official starting rotations for assets
+export const ROTATIONS = {
+  DOCKED_KAYAK: { y: Math.PI / 2 }     // Oriented parallel to the docks (bow along Z-axis)
 };
 
 export const BOUNDS = {

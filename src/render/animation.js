@@ -59,14 +59,20 @@ export function updateAnimations(delta, elapsedTime, boatMesh, actorMeshes, game
   boatMesh.position.x += (targetDockX - boatMesh.position.x) * boatSpeed * delta;
 
   // 2. Kayak Micro-Bobbing (Sine wave math on water surface)
-  // Only apply bobbing if the boat is close to its target dock or gently moving
+  // Only apply bobbing if the boat is close to its target dock or gently moving.
+  // When rotated 90 degrees (aligned with Z-axis), bobPitch (pitching along the kayak length)
+  // needs to affect rotation.x, and bobRoll (side-to-side rolling) should affect rotation.z.
   const bobY = POSITIONS.BOAT_DOCK_LEFT.y + Math.sin(elapsedTime * 2.2) * 0.022;
-  const bobPitch = Math.sin(elapsedTime * 1.6) * 0.012; // Rotation on Z-axis
-  const bobRoll = Math.cos(elapsedTime * 1.3) * 0.016;  // Rotation on X-axis
+  const bobPitch = Math.sin(elapsedTime * 1.6) * 0.012; // Pitching along kayak length (local X, global Z)
+  const bobRoll = Math.cos(elapsedTime * 1.3) * 0.016;  // Side-to-side roll (local Z, global X)
 
   boatMesh.position.y = bobY;
-  boatMesh.rotation.z = bobPitch;
-  boatMesh.rotation.x = bobRoll;
+
+  // Since the kayak mesh has a default rotation of y = Math.PI / 2:
+  // Local pitch is around Z-axis of unrotated mesh, now corresponds to X-axis rotation globally.
+  // Local roll is around X-axis of unrotated mesh, now corresponds to Z-axis rotation globally.
+  boatMesh.rotation.z = bobRoll;
+  boatMesh.rotation.x = bobPitch;
 
   // 3. Actors Position Updates and Hop Animations
   const actors = Object.keys(actorMeshes);
@@ -100,7 +106,7 @@ export function updateAnimations(delta, elapsedTime, boatMesh, actorMeshes, game
       targetX = boatMesh.position.x + seatOffset.x;
       targetY = boatMesh.position.y + seatOffset.y;
       targetZ = boatMesh.position.z + seatOffset.z;
-      targetRotY = actor === 'man' ? Math.PI / 2 : -Math.PI / 2; // Face forward in kayak
+      targetRotY = actor === 'man' ? 0 : Math.PI; // Face forward/backward along kayak's Z-axis
     } else {
       // Position on the respective land bank
       const bankPos = getBankPosition(actor, currentLocation);

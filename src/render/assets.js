@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { COLORS } from '../core/constants.js';
+import { COLORS, ROTATIONS } from '../core/constants.js';
 
 /**
  * Creates a stylized conifer pine tree.
@@ -153,6 +153,9 @@ export function createKayak() {
   paddleGroup.position.set(0, 0.35, 0);
   paddleGroup.rotation.y = 0.15; // Slightly slanted across kayak
   kayakGroup.add(paddleGroup);
+
+  // Set default rotation to make the kayak parallel to the dock (aligned with Z-axis)
+  kayakGroup.rotation.y = ROTATIONS.DOCKED_KAYAK.y;
 
   return kayakGroup;
 }

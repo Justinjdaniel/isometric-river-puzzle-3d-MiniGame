@@ -33,11 +33,11 @@ export function setupScene(container) {
     console.error('[Scene] Container element not found.');
   }
 
-  // 4. Lighting Setup (Stylized Low-Poly Rig)
-  const ambientLight = new THREE.AmbientLight(COLORS.SKY_AMBIENT, 0.6);
+  // 4. Lighting Setup (Stylized Low-Poly Rig - Bright Sunny Day)
+  const ambientLight = new THREE.AmbientLight(COLORS.SKY_AMBIENT, 0.95);
   scene.add(ambientLight);
 
-  const directionalLight = new THREE.DirectionalLight(COLORS.SUNLIGHT, 1.4);
+  const directionalLight = new THREE.DirectionalLight(COLORS.SUNLIGHT, 1.7);
   directionalLight.position.set(14, 22, 10);
   directionalLight.castShadow = true;
 
@@ -129,10 +129,10 @@ export function setupScene(container) {
   const waterMaterial = new THREE.MeshStandardMaterial({
     color: COLORS.WATER,
     flatShading: true,
-    roughness: 0.15,
-    metalness: 0.8,
+    roughness: 0.12,
+    metalness: 0.3, // Lowered metalness slightly so it reflects bright diffuse light and looks clean, vibrant turquoise
     transparent: true,
-    opacity: 0.88
+    opacity: 0.85
   });
   const waterMesh = new THREE.Mesh(waterGeom, waterMaterial);
   waterMesh.rotation.x = -Math.PI / 2;

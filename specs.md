@@ -54,13 +54,21 @@ The puzzle follows the classic river crossing riddle (Shepherd/Man, Two Sheep, a
   - `actorPositions`: Object mapping `'man'`, `'fox'`, `'sheep1'`, `'sheep2'` to `'left'`, `'boat'`, or `'right'`.
   - `boatLocation`: `'left'` or `'right'`.
 
-## 3. Aesthetic Style
+## 3. Aesthetic Style & Visual Specifications (Vibrant Sunlit Day)
 
 - **Low-Poly Art Design**:
   - Faceted look, no smooth shading. Apply `flatShading: true` to all materials.
   - Landmasses and floating chunks built with stylized, randomized sharp vertices.
   - Trees built from basic geometry (cylinders for trunks, stacked cones/tetrahedrons for foliage).
   - River animated with slight wave vertex displacements or simple vertex shader offsets.
+- **Vibrant Sunlit Lighting Model**:
+  - Shifted from a dim, moody aesthetic to a bright, vibrant, sunlit daytime scene.
+  - **Sky/Background**: Deep, dark backdrop replaced with a bright, clean, sunny backdrop or a vivid shadow fill matching daylight.
+  - **Water**: Clear turquoise hue (`#33EEFF` or `#00CCCC`) with a stylized, glassy reflection.
+  - **Grass**: Vibrant, rich, sunlit grass green (`#55CC55`).
+  - **Rock Cutout**: Lighter, warm-toned rocky brown/earth texture.
+  - **AmbientLight**: Globally lightened shadows using a strong AmbientLight (intensity `0.85+` with light-blue sky color).
+  - **DirectionalLight**: A high-intensity main sunlight (intensity `1.6+` using warm color `#FFFCEB`) casting sharp, well-defined shadows that create depth across the low-poly terrain block.
 - **Glassmorphic UI**:
   - Overlaid HUD, menus, and win/fail modals.
   - Transparent frosted glass aesthetic (`backdrop-filter: blur(10px); background: rgba(255, 255, 255, 0.15)`).
