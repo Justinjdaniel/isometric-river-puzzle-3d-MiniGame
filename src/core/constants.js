@@ -3,8 +3,8 @@
 export const DEVELOPER_MODE = true; // Set to false to lock characters in place for Step 4
 
 export const COLORS = {
-  WATER: 0x33EEFF,          // Clear turquoise water
-  BANK_LAND: 0x55CC55,      // Vibrant, sunlit green meadow
+  WATER: 0x00FFFF,          // Bright brilliant cyan/turquoise water
+  BANK_LAND: 0x66FF33,      // Hyper-vibrant sunlit neon meadow green
   EARTH_DARK: 0x8B5A2B,     // Lighter, warm-toned earthy block sides
   DOCK_WOOD: 0xA0522D,      // Rich wooden docks
   BOAT: 0xFF7700,           // Vibrant stylized orange kayak/canoe
@@ -25,8 +25,8 @@ export const SPEED = {
 export const POSITIONS = {
   LEFT_BANK: { x: -6.0, y: 0.0, z: 0.0 },
   RIGHT_BANK: { x: 6.0, y: 0.0, z: 0.0 },
-  BOAT_DOCK_LEFT: { x: -1.7, y: -0.05, z: 0.0 },  // Placed right next to the left dock
-  BOAT_DOCK_RIGHT: { x: 1.7, y: -0.05, z: 0.0 }   // Placed right next to the right dock
+  BOAT_DOCK_LEFT: { x: -1.05, y: -0.05, z: 0.0 },  // Positioned parallel directly on the water edge next to left dock
+  BOAT_DOCK_RIGHT: { x: 1.05, y: -0.05, z: 0.0 }   // Positioned parallel directly on the water edge next to right dock
 };
 
 // Actor starting coordinates on the left bank (or target bank coordinates)

@@ -26,6 +26,7 @@ export function setupScene(container) {
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  renderer.outputColorSpace = THREE.SRGBColorSpace; // Make colors vibrant, brilliant, and properly color-managed
 
   if (container) {
     container.appendChild(renderer.domElement);
