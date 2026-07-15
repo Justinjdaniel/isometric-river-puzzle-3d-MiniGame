@@ -1,0 +1,30 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "type": "npm",
+      "script": "dev",
+      "label": "pnpm: dev",
+      "detail": "pnpm run dev",
+      "isBackground": true,
+      "problemMatcher": ["$vite-dev"]
+    },
+    {
+      "type": "npm",
+      "script": "build",
+      "label": "pnpm: build",
+      "detail": "pnpm run build",
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      }
+    },
+    {
+      "type": "npm",
+      "script": "preview",
+      "label": "pnpm: preview",
+      "detail": "pnpm run preview",
+      "isBackground": true
+    }
+  ]
+}

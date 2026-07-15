@@ -1,0 +1,40 @@
+/* Reset and full-screen styles for Three.js Canvas */
+
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background-color: #050505;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  color: #ffffff;
+}
+
+#canvas-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+}
+
+#app-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  z-index: 2;
+  pointer-events: none; /* Let clicks pass through to canvas if not on UI elements */
+}
+
+/* Base style for glassmorphic containers */
+.glass-panel {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+  pointer-events: auto; /* Re-enable clicks for interactive UI elements */
+}

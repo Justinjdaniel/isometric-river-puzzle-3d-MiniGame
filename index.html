@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Isometric River Crossing Puzzle Game (3D)</title>
+  <link rel="stylesheet" href="./src/style.css">
+</head>
+<body>
+  <!-- Container where the Three.js canvas will be injected -->
+  <div id="canvas-container"></div>
+
+  <!-- Foreground HUD / Glassmorphic UI overlays -->
+  <div id="app-container">
+    <header style="position: absolute; top: 20px; left: 20px;" class="glass-panel">
+      <div style="padding: 15px 25px;">
+        <h1 style="margin: 0 0 5px 0; font-size: 1.5rem; font-weight: 700; letter-spacing: -0.5px;">Isometric Valley 3D</h1>
+        <p style="margin: 0; font-size: 0.85rem; color: rgba(255, 255, 255, 0.7);">Phase 1: Environment Setup & Hello Three.js</p>
+      </div>
+    </header>
+
+    <footer style="position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);" class="glass-panel">
+      <div style="padding: 10px 20px; text-align: center; font-size: 0.8rem; letter-spacing: 0.5px; text-transform: uppercase;">
+        Multi-Agent Orchestrated Baseline • Powered by Three.js & Vite
+      </div>
+    </footer>
+  </div>
+
+  <!-- JavaScript Entry Point -->
+  <script type="module" src="./src/main.js"></script>
+</body>
+</html>
