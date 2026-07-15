@@ -60,3 +60,37 @@ This file tracks the completion progress of the **Isometric River Crossing Puzzl
   - **Description**: Write extensive unit tests in `src/core/state.test.js` validating rules, bounds, win conditions, and game over states.
   - **Assignee**: Sub-Agent
   - **Status**: `[Done]` (Verified by Jules)
+
+---
+
+## 3. Design 3D Scene, Assets & Animations
+
+- [x] **Task 10: Update Technical Specifications & Design Parameters**
+  - **Description**: Refine `specs.md` with layout boundaries, actor offsets, developer demo controls, and low-poly visual specifications.
+  - **Assignee**: Sub-Agent
+  - **Status**: `[Done]` (Verified by Jules)
+
+- [x] **Task 11: Setup Constants and Coordinates**
+  - **Description**: Refine `src/core/constants.js` to include exact coordinates, heights, scale modifiers, and `DEVELOPER_MODE` toggle.
+  - **Assignee**: Sub-Agent
+  - **Status**: `[Done]` (Verified by Jules)
+
+- [x] **Task 12: Build Isometric Scene with Floating Chunk & River**
+  - **Description**: Create `src/render/scene.js` with the orthographic camera, a floating modular grass/earth landmass block, background mountains, custom flowing riverbed, docks, and soft low-poly directional/ambient lighting.
+  - **Assignee**: Sub-Agent
+  - **Status**: `[Done]` (Verified by Jules)
+
+- [x] **Task 13: Program Procedural Low-Poly Asset Models**
+  - **Description**: Create `src/render/assets.js` with conifer trees, kayak/canoe, shepherd, fox, and parameterizable sheep models using flat-shaded standard materials.
+  - **Assignee**: Sub-Agent
+  - **Status**: `[Done]` (Verified by Jules)
+
+- [x] **Task 14: Implement Wave Displacement & Smooth Transition Animations**
+  - **Description**: Create `src/render/animation.js` with CPU plane vertex displacement, bobbing effects, lerp translations, and developer keyboard-triggered animation demo routines.
+  - **Assignee**: Sub-Agent
+  - **Status**: `[Done]` (Verified by Jules)
+
+- [x] **Task 15: Orchestrate Main Entry Point**
+  - **Description**: Connect the scene setup, asset spawning, rendering, and anim loop in `src/main.js` to render the initial static board state with developer-triggerable demo animations.
+  - **Assignee**: Sub-Agent
+  - **Status**: `[Done]` (Verified by Jules)

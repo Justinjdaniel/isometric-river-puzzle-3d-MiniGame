@@ -6,12 +6,25 @@ This document establishes the architectural, visual, and behavioral specificatio
 
 - **Projection**: Isometric projection using an orthographic camera (`THREE.OrthographicCamera`).
 - **Coordinate Alignments**:
-  - **Left Bank**: Coordinates negative on the X-axis (e.g., $X \in [-10, -3]$).
-  - **River Channel**: Coordinates near the center (e.g., $X \in [-3, 3]$).
-  - **Right Bank**: Coordinates positive on the X-axis (e.g., $X \in [3, 10]$).
-  - **Z-Axis**: Represents the depth of the valley (e.g., $Z \in [-5, 5]$).
-  - **Y-Axis**: Height axis ($Y = 0$ is the water surface, positive $Y$ represents land/meadows/mountains).
-- **Floating Chunk Base**: The world is a circular or square floating rock structure with vertical cutouts down into a dark void.
+  - **Floating Chunk Total Dimensions**: Width 16.0 units (X-axis, $X \in [-8.0, 8.0]$), Depth 12.0 units (Z-axis, $Z \in [-6.0, 6.0]$), Height/Void Depth 3.0 units deep (Y-axis, extruded from $Y = 0.0$ down to $Y = -3.0$).
+  - **Left Bank**: $X \le -2.5$ (Grass top height $Y = 0.0$).
+  - **River Channel**: Spans from $X = -2.5$ to $X = 2.5$. Water plane sits slightly below the grass level at $Y = -0.1$ to prevent Z-fighting.
+  - **Right Bank**: $X \ge 2.5$ (Grass top height $Y = 0.0$).
+  - **Z-Axis**: Represents depth ($Z \in [-6, 6]$).
+  - **Y-Axis**: Height axis ($Y = 0$ is land surface, positive $Y$ represents assets/characters/mountains, negative $Y$ is floating chunk base and void).
+  - **Docks**: Placed at $X = -2.5$ and $X = 2.5$, extending slightly over water at height $Y = 0.05$.
+- **Floating Chunk Base**: The world is a clean, modular rectangular block with top grass-green faces and dark, earthy, rocky vertical sides extending downwards into the blackness.
+
+- **Actor Starting Offsets on Left Bank**:
+  - **Shepherd ('man')**: $X = -4.5$, $Y = 0.0$, $Z = 0.0$ (Closest to dock)
+  - **Fox**: $X = -5.5$, $Y = 0.0$, $Z = -2.0$ (Keeping its distance)
+  - **Sheep 1**: $X = -5.5$, $Y = 0.0$, $Z = 2.0$
+  - **Sheep 2**: $X = -6.5$, $Y = 0.0$, $Z = 0.5$ (Visual lamb distinction: scaled down to 0.85, rotated differently)
+
+- **Developer Demo Mode**:
+  - If `DEVELOPER_MODE` is enabled in `constants.js`, temporary keyboard controls allow testing:
+    - `Spacebar`: Smoothly transit boat/kayak between docks.
+    - Keys `1`, `2`, `3`, `4`: Board/unload Shepherd, Fox, Sheep 1, and Sheep 2.
 
 ## 2. State Machine Requirements
 

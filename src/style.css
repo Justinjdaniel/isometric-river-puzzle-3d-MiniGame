@@ -1,4 +1,4 @@
-/* Reset and full-screen styles for Three.js Canvas */
+/* Reset and full-screen styles for Three.js Canvas & Glassmorphic UI */
 
 html, body {
   margin: 0;
@@ -6,7 +6,7 @@ html, body {
   width: 100%;
   height: 100%;
   overflow: hidden;
-  background-color: #050505;
+  background-color: #0b0e14;
   font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
   color: #ffffff;
 }
@@ -30,13 +30,19 @@ html, body {
 
 /* Base style for glassmorphic containers */
 .glass-panel {
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
   border-radius: 12px;
-  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4);
   pointer-events: auto; /* Re-enable clicks for interactive UI elements */
+  transition: all 0.3s ease;
+}
+
+.glass-panel:hover {
+  background: rgba(255, 255, 255, 0.11);
+  border-color: rgba(255, 255, 255, 0.22);
 }
 
 /* HUD Header Styles */
@@ -44,23 +50,228 @@ html, body {
   position: absolute;
   top: 20px;
   left: 20px;
+  max-width: 420px;
 }
 
 .hud-header-content {
-  padding: 15px 25px;
+  padding: 15px 20px;
 }
 
 .hud-title {
   margin: 0 0 5px 0;
-  font-size: 1.5rem;
-  font-weight: 700;
-  letter-spacing: -0.5px;
+  font-size: 1.3rem;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  color: #ffffff;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.3);
 }
 
 .hud-subtitle {
+  margin: 0 0 8px 0;
+  font-size: 0.82rem;
+  line-height: 1.35;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.hud-rules-warning {
   margin: 0;
+  font-size: 0.76rem;
+  line-height: 1.3;
+  color: #ffcc66;
+  background: rgba(255, 204, 102, 0.08);
+  border-radius: 6px;
+  padding: 6px 10px;
+  border-left: 3px solid #ffcc66;
+}
+
+/* HUD Status Styles (Left Bank, Right Bank, and Boat Contents) */
+.hud-status {
+  position: absolute;
+  top: 190px;
+  left: 20px;
+  width: 320px;
+}
+
+.hud-status-content {
+  padding: 15px 18px;
+}
+
+.status-heading {
+  margin: 0 0 10px 0;
   font-size: 0.85rem;
-  color: rgba(255, 255, 255, 0.7);
+  font-weight: 700;
+  letter-spacing: 0.8px;
+  color: #66ccff;
+  text-transform: uppercase;
+}
+
+.status-item {
+  margin: 0 0 6px 0;
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.status-item em {
+  color: rgba(255, 255, 255, 0.45);
+}
+
+.hud-divider {
+  border: 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  margin: 12px 0;
+}
+
+.banks-info {
+  display: flex;
+  gap: 15px;
+}
+
+.bank-col {
+  flex: 1;
+  font-size: 0.8rem;
+}
+
+.bank-col strong {
+  display: block;
+  margin-bottom: 5px;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.bank-col ul {
+  margin: 0;
+  padding-left: 14px;
+}
+
+.bank-col li {
+  margin-bottom: 4px;
+  color: rgba(255, 255, 255, 0.95);
+}
+
+.bank-col em {
+  color: rgba(255, 255, 255, 0.35);
+}
+
+/* Developer Controls Panel (Placed at bottom-left or top-right) */
+.dev-controls-panel {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  width: 280px;
+  padding: 15px 18px;
+}
+
+.dev-instruction {
+  margin: 0 0 8px 0;
+  font-size: 0.8rem;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.dev-instruction kbd {
+  background: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-bottom: 2px solid rgba(255, 255, 255, 0.4);
+  border-radius: 4px;
+  padding: 2px 7px;
+  font-family: monospace;
+  font-size: 0.75rem;
+  font-weight: bold;
+  color: #ffaa44;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+  min-width: 14px;
+  text-align: center;
+}
+
+.dev-note {
+  margin-top: 12px;
+  font-size: 0.7rem;
+  color: rgba(255, 255, 255, 0.45);
+  line-height: 1.35;
+  text-align: center;
+}
+
+/* Terminal Modals (Victory / Game Over Overlays) */
+.modal-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(5, 8, 12, 0.55);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+  pointer-events: auto; /* Enable interaction with overlay */
+}
+
+.terminal-modal {
+  width: 440px;
+  padding: 30px;
+  text-align: center;
+  animation: modalScaleUp 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+  box-shadow: 0 16px 48px 0 rgba(0, 0, 0, 0.6);
+}
+
+@keyframes modalScaleUp {
+  0% {
+    transform: scale(0.85);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.modal-title {
+  margin: 0 0 15px 0;
+  font-size: 1.8rem;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+}
+
+.terminal-modal.victory .modal-title {
+  color: #66ff99;
+  text-shadow: 0 0 15px rgba(102, 255, 153, 0.35);
+}
+
+.terminal-modal.game_over_fox_ate_sheep .modal-title {
+  color: #ff5555;
+  text-shadow: 0 0 15px rgba(255, 85, 85, 0.35);
+}
+
+.modal-text {
+  margin: 0 0 25px 0;
+  font-size: 0.92rem;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.reset-button {
+  background: linear-gradient(135deg, #2a6f97, #014f86);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 8px;
+  color: #ffffff;
+  padding: 10px 24px;
+  font-size: 0.95rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+}
+
+.reset-button:hover {
+  background: linear-gradient(135deg, #2c7da0, #2a6f97);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0,0,0,0.4);
+}
+
+.reset-button:active {
+  transform: translateY(0);
 }
 
 /* HUD Footer Styles */
@@ -69,12 +280,14 @@ html, body {
   bottom: 20px;
   left: 50%;
   transform: translateX(-50%);
+  pointer-events: none;
 }
 
 .hud-footer-content {
   padding: 10px 20px;
   text-align: center;
-  font-size: 0.8rem;
-  letter-spacing: 0.5px;
+  font-size: 0.72rem;
+  letter-spacing: 1px;
   text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.5);
 }
