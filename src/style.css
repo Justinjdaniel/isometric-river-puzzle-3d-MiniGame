@@ -38,3 +38,54 @@ html, body {
   box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
   pointer-events: auto; /* Re-enable clicks for interactive UI elements */
 }
+
+/* Base style for glassmorphic containers */
+.glass-panel {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+  pointer-events: auto; /* Re-enable clicks for interactive UI elements */
+}
+
+/* HUD Header Styles */
+.hud-header {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+}
+
+.hud-header-content {
+  padding: 15px 25px;
+}
+
+.hud-title {
+  margin: 0 0 5px 0;
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+}
+
+.hud-subtitle {
+  margin: 0;
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+/* HUD Footer Styles */
+.hud-footer {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.hud-footer-content {
+  padding: 10px 20px;
+  text-align: center;
+  font-size: 0.8rem;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
