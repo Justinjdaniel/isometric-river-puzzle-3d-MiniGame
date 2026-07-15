@@ -43,6 +43,11 @@ export class GameState {
    * @returns {boolean} - true if boarding succeeded, false otherwise
    */
   loadToBoat(actor) {
+    if (this.checkRules() !== 'playing') {
+      console.warn(`[GameState] loadToBoat failed: Game is already in a terminal state`);
+      return false;
+    }
+
     if (!this.actorPositions.hasOwnProperty(actor)) {
       console.warn(`[GameState] loadToBoat failed: Invalid actor "${actor}"`);
       return false;
@@ -79,6 +84,11 @@ export class GameState {
    * @returns {boolean} - true if unloading succeeded, false otherwise
    */
   unloadFromBoat(actor) {
+    if (this.checkRules() !== 'playing') {
+      console.warn(`[GameState] unloadFromBoat failed: Game is already in a terminal state`);
+      return false;
+    }
+
     if (!this.actorPositions.hasOwnProperty(actor)) {
       console.warn(`[GameState] unloadFromBoat failed: Invalid actor "${actor}"`);
       return false;
@@ -102,6 +112,11 @@ export class GameState {
    * @returns {boolean} - true if movement succeeded, false otherwise
    */
   moveBoat() {
+    if (this.checkRules() !== 'playing') {
+      console.warn(`[GameState] moveBoat failed: Game is already in a terminal state`);
+      return false;
+    }
+
     // Shepherd ('man') must be on the boat to move it
     if (this.actorPositions['man'] !== 'boat') {
       console.warn('[GameState] moveBoat failed: Shepherd ("man") must be on the boat to sail');
@@ -111,6 +126,18 @@ export class GameState {
     // Toggle boat location
     this.boatLocation = this.boatLocation === 'left' ? 'right' : 'left';
     return true;
+  }
+
+  /**
+   * Helper to evaluate presence of an actor on a specific bank.
+   * @param {string} actor - 'man', 'fox', 'sheep1', 'sheep2'
+   * @param {string} bank - 'left', 'right'
+   * @returns {boolean}
+   * @private
+   */
+  _isPresentOnBank(actor, bank) {
+    const pos = this.actorPositions[actor];
+    return pos === bank || (pos === 'boat' && this.boatLocation === bank);
   }
 
   /**
@@ -125,19 +152,13 @@ export class GameState {
       return 'victory';
     }
 
-    // Helper to evaluate presence on a bank
-    const isPresentOnBank = (actor, bank) => {
-      const pos = this.actorPositions[actor];
-      return pos === bank || (pos === 'boat' && this.boatLocation === bank);
-    };
-
     // 2. Check each bank ('left' and 'right') for game over conditions
     const banks = ['left', 'right'];
     for (const bank of banks) {
-      const manPresent = isPresentOnBank('man', bank);
-      const foxPresent = isPresentOnBank('fox', bank);
-      const sheep1Present = isPresentOnBank('sheep1', bank);
-      const sheep2Present = isPresentOnBank('sheep2', bank);
+      const manPresent = this._isPresentOnBank('man', bank);
+      const foxPresent = this._isPresentOnBank('fox', bank);
+      const sheep1Present = this._isPresentOnBank('sheep1', bank);
+      const sheep2Present = this._isPresentOnBank('sheep2', bank);
 
       // If shepherd is away, and fox is present with either sheep
       if (!manPresent && foxPresent && (sheep1Present || sheep2Present)) {

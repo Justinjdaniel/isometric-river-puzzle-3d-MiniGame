@@ -60,21 +60,21 @@ describe('GameState Class Unit Tests', () => {
   });
 
   test('Cannot load an actor who is not on the same bank as the boat', () => {
-    // Move shepherd and sheep1 to 'right' bank
+    // Move shepherd and fox to 'right' bank (this is safe as sheep1 and sheep2 are left together)
     expect(game.loadToBoat('man')).toBe(true);
-    expect(game.loadToBoat('sheep1')).toBe(true);
+    expect(game.loadToBoat('fox')).toBe(true);
     expect(game.moveBoat()).toBe(true); // boat is at 'right' now
 
     expect(game.unloadFromBoat('man')).toBe(true);
-    expect(game.unloadFromBoat('sheep1')).toBe(true);
+    expect(game.unloadFromBoat('fox')).toBe(true);
 
-    // Now boat is at 'right'. Fox is still at 'left'.
+    // Now boat is at 'right'. Sheep1 is still at 'left'.
     expect(game.boatLocation).toBe('right');
-    expect(game.actorPositions.fox).toBe('left');
+    expect(game.actorPositions.sheep1).toBe('left');
 
-    // Try to load fox into the boat - should fail because fox is on 'left' and boat is on 'right'
-    expect(game.loadToBoat('fox')).toBe(false);
-    expect(game.actorPositions.fox).toBe('left');
+    // Try to load sheep1 into the boat - should fail because sheep1 is on 'left' and boat is on 'right'
+    expect(game.loadToBoat('sheep1')).toBe(false);
+    expect(game.actorPositions.sheep1).toBe('left');
   });
 
   test('Sheep-only safety (leaving sheep1 and sheep2 alone together is safe)', () => {
@@ -129,11 +129,11 @@ describe('GameState Class Unit Tests', () => {
   });
 
   test('Reset reverts everything to starting positions', () => {
-    // Move some things around
+    // Move some things around safely
     expect(game.loadToBoat('man')).toBe(true);
-    expect(game.loadToBoat('sheep1')).toBe(true);
+    expect(game.loadToBoat('fox')).toBe(true);
     expect(game.moveBoat()).toBe(true);
-    expect(game.unloadFromBoat('man')).toBe(true);
+    expect(game.unloadFromBoat('fox')).toBe(true);
 
     // Perform reset
     game.reset();
@@ -207,5 +207,18 @@ describe('GameState Class Unit Tests', () => {
 
     // Verify victory!
     expect(game.checkRules()).toBe('victory');
+  });
+
+  test('Actions are blocked in terminal states', () => {
+    // Trigger game over
+    game.loadToBoat('man');
+    game.loadToBoat('sheep2');
+    game.moveBoat();
+    expect(game.checkRules()).toBe('game_over_fox_ate_sheep');
+
+    // Try to move boat or load/unload - should fail
+    expect(game.moveBoat()).toBe(false);
+    expect(game.loadToBoat('fox')).toBe(false);
+    expect(game.unloadFromBoat('man')).toBe(false);
   });
 });
