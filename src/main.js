@@ -26,7 +26,12 @@ renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-container.appendChild(renderer.domElement);
+
+if (container) {
+  container.appendChild(renderer.domElement);
+} else {
+  console.error('Canvas container element not found.');
+}
 
 // 4. Lighting Setup (Low-Poly Flat-Shaded Rig)
 const ambientLight = new THREE.AmbientLight('#ffffff', 0.5);
@@ -90,13 +95,17 @@ window.addEventListener('resize', () => {
 });
 
 // 7. Animation Loop
+const clock = new THREE.Clock();
+
 function animate() {
   requestAnimationFrame(animate);
 
-  // Rotate the cube on multiple axes for a full flat-shaded 3D look
-  cube.rotation.x += 0.01;
-  cube.rotation.y += 0.015;
-  cube.rotation.z += 0.005;
+  const delta = clock.getDelta();
+
+  // Rotate the cube on multiple axes for a full flat-shaded 3D look (scaled by delta time)
+  cube.rotation.x += 0.6 * delta;
+  cube.rotation.y += 0.9 * delta;
+  cube.rotation.z += 0.3 * delta;
 
   renderer.render(scene, camera);
 }
