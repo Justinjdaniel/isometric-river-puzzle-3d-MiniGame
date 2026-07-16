@@ -28,29 +28,31 @@ html, body {
   pointer-events: none; /* Let clicks pass through to canvas if not on UI elements */
 }
 
-/* Base style for glassmorphic containers */
+/* Base style for glassmorphic containers - Glassmorphism Upgrade */
 .glass-panel {
-  background: rgba(255, 255, 255, 0.08);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  border-radius: 12px;
-  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4);
+  background: rgba(240, 248, 255, 0.65); /* Frosted aesthetic with high readability */
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.4); /* Clean subtle white border */
+  border-radius: 14px;
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.2);
   pointer-events: auto; /* Re-enable clicks for interactive UI elements */
-  transition: all 0.3s ease;
+  transition: all 0.25s ease;
+  color: #1a2530; /* Darker, high-contrast readable text */
 }
 
 .glass-panel:hover {
-  background: rgba(255, 255, 255, 0.11);
-  border-color: rgba(255, 255, 255, 0.22);
+  background: rgba(240, 248, 255, 0.72);
+  border-color: rgba(255, 255, 255, 0.5);
+  box-shadow: 0 12px 40px 0 rgba(0, 0, 0, 0.3);
 }
 
 /* Interactive Buttons and Elements */
 .glass-button {
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(42, 111, 151, 0.15);
+  border: 1px solid rgba(42, 111, 151, 0.3);
   border-radius: 8px;
-  color: #ffffff;
+  color: #014f86;
   padding: 8px 16px;
   font-size: 0.8rem;
   font-weight: 700;
@@ -61,10 +63,10 @@ html, body {
 }
 
 .glass-button:hover:not(.disabled):not([disabled]) {
-  background: rgba(255, 255, 255, 0.15);
-  border-color: rgba(255, 255, 255, 0.35);
+  background: rgba(42, 111, 151, 0.25);
+  border-color: rgba(42, 111, 151, 0.5);
   transform: translateY(-1.5px);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
 }
 
 .glass-button:active:not(.disabled):not([disabled]) {
@@ -74,9 +76,9 @@ html, body {
 .glass-button.disabled, .glass-button[disabled] {
   opacity: 0.45;
   cursor: not-allowed;
-  background: rgba(255, 255, 255, 0.03);
-  border-color: rgba(255, 255, 255, 0.1);
-  color: rgba(255, 255, 255, 0.4);
+  background: rgba(0, 0, 0, 0.05);
+  border-color: rgba(0, 0, 0, 0.1);
+  color: rgba(0, 0, 0, 0.4);
 }
 
 .action-buttons-container {
@@ -104,79 +106,138 @@ html, body {
   color: #ffaaaa !important;
 }
 
-/* HUD Header Styles */
-.hud-header {
+/* Left Column Layout: Dedicated Rules & Instructions Panel */
+.left-hud-panel {
   position: absolute;
   top: 20px;
   left: 20px;
-  max-width: 420px;
+  bottom: 20px;
+  width: 340px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  overflow-y: auto;
+  pointer-events: auto;
 }
 
-.hud-header-content {
-  padding: 15px 20px;
+/* Right Column Layout: Unified Stats, Controls & Banks Panel */
+.right-hud-panel {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  bottom: 20px;
+  width: 340px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  overflow-y: auto;
+  pointer-events: auto;
+}
+
+/* Card layout inner padding */
+.hud-card {
+  padding: 18px 22px;
+}
+
+/* HUD Header Styles */
+.hud-header {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  padding-bottom: 12px;
 }
 
 .hud-title {
-  margin: 0 0 5px 0;
-  font-size: 1.3rem;
-  font-weight: 800;
-  letter-spacing: 0.5px;
-  color: #ffffff;
-  text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+  margin: 0 0 4px 0;
+  font-size: 1.25rem;
+  font-weight: 850;
+  letter-spacing: -0.2px;
+  color: #014f86;
 }
 
 .hud-subtitle {
-  margin: 0 0 8px 0;
+  margin: 0;
   font-size: 0.82rem;
-  line-height: 1.35;
-  color: rgba(255, 255, 255, 0.8);
+  line-height: 1.4;
+  color: #2c3e50;
+}
+
+.instructions-card-content {
+  font-size: 0.84rem;
+  line-height: 1.45;
+  color: #2c3e50;
+}
+
+.instructions-card-content p {
+  margin: 0 0 10px 0;
+}
+
+.rules-list {
+  margin: 8px 0;
+  padding-left: 18px;
+}
+
+.rules-list li {
+  margin-bottom: 6px;
 }
 
 .hud-rules-warning {
-  margin: 0;
-  font-size: 0.76rem;
-  line-height: 1.3;
-  color: #ffcc66;
-  background: rgba(255, 204, 102, 0.08);
-  border-radius: 6px;
-  padding: 6px 10px;
-  border-left: 3px solid #ffcc66;
+  margin-top: 12px;
+  font-size: 0.78rem;
+  line-height: 1.35;
+  color: #a04000;
+  background: rgba(230, 126, 34, 0.12);
+  border-radius: 8px;
+  padding: 8px 12px;
+  border-left: 4px solid #d35400;
+}
+
+/* Header with Interactive Buttons/Icons on cards */
+.card-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+/* Settings trigger gear icon */
+.settings-gear-btn {
+  background: none;
+  border: none;
+  font-size: 1.35rem;
+  cursor: pointer;
+  transition: transform 0.3s ease;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.settings-gear-btn:hover {
+  transform: rotate(45deg);
 }
 
 /* HUD Status Styles (Left Bank, Right Bank, and Boat Contents) */
-.hud-status {
-  position: absolute;
-  top: 190px;
-  left: 20px;
-  width: 320px;
-}
-
-.hud-status-content {
-  padding: 15px 18px;
-}
-
 .status-heading {
-  margin: 0 0 10px 0;
-  font-size: 0.85rem;
-  font-weight: 700;
+  margin: 0;
+  font-size: 0.88rem;
+  font-weight: 800;
   letter-spacing: 0.8px;
-  color: #66ccff;
+  color: #014f86;
   text-transform: uppercase;
 }
 
 .status-item {
   margin: 0 0 6px 0;
-  font-size: 0.85rem;
-  color: rgba(255, 255, 255, 0.9);
+  font-size: 0.84rem;
+  color: #2c3e50;
 }
 
 .status-item em {
-  color: rgba(255, 255, 255, 0.45);
+  color: #7f8c8d;
 }
 
 .hud-divider {
   border: 0;
-  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
   margin: 12px 0;
 }
 
@@ -193,7 +254,8 @@ html, body {
 .bank-col strong {
   display: block;
   margin-bottom: 5px;
-  color: rgba(255, 255, 255, 0.6);
+  color: #2c3e50;
+  font-weight: 800;
 }
 
 .bank-col ul {
@@ -203,20 +265,16 @@ html, body {
 
 .bank-col li {
   margin-bottom: 4px;
-  color: rgba(255, 255, 255, 0.95);
+  color: #1a2530;
 }
 
 .bank-col em {
-  color: rgba(255, 255, 255, 0.35);
+  color: #7f8c8d;
 }
 
-/* Developer Controls Panel (Placed at bottom-left or top-right) */
+/* Developer Controls Panel (Nested card at the bottom of Right Panel) */
 .dev-controls-panel {
-  position: absolute;
-  top: 20px;
-  right: 20px;
-  width: 280px;
-  padding: 15px 18px;
+  padding: 14px 18px;
 }
 
 .dev-instruction {
@@ -257,13 +315,13 @@ html, body {
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(5, 8, 12, 0.55);
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
+  background: rgba(5, 8, 12, 0.35);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 10;
+  z-index: 100;
   pointer-events: auto; /* Enable interaction with overlay */
 }
 
@@ -272,7 +330,80 @@ html, body {
   padding: 30px;
   text-align: center;
   animation: modalScaleUp 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
-  box-shadow: 0 16px 48px 0 rgba(0, 0, 0, 0.6);
+  box-shadow: 0 16px 48px 0 rgba(0, 0, 0, 0.3);
+}
+
+/* Beautiful modern toggle switch */
+.settings-modal-content {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  margin: 15px 0 25px 0;
+}
+
+.settings-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: rgba(0, 0, 0, 0.04);
+  padding: 10px 14px;
+  border-radius: 8px;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.settings-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: #2c3e50;
+}
+
+.toggle-switch {
+  position: relative;
+  display: inline-block;
+  width: 52px;
+  height: 28px;
+}
+
+.toggle-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.toggle-slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #bdc3c7;
+  transition: .3s;
+  border-radius: 34px;
+}
+
+.toggle-slider:before {
+  position: absolute;
+  content: "";
+  height: 20px;
+  width: 20px;
+  left: 4px;
+  bottom: 4px;
+  background-color: white;
+  transition: .3s;
+  border-radius: 50%;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+}
+
+input:checked + .toggle-slider {
+  background-color: #2a6f97;
+}
+
+input:checked + .toggle-slider:before {
+  transform: translateX(24px);
 }
 
 @keyframes modalScaleUp {
@@ -294,20 +425,20 @@ html, body {
 }
 
 .terminal-modal.victory .modal-title {
-  color: #66ff99;
-  text-shadow: 0 0 15px rgba(102, 255, 153, 0.35);
+  color: #27ae60;
+  text-shadow: 0 0 15px rgba(39, 174, 96, 0.25);
 }
 
 .terminal-modal.game_over_fox_ate_sheep .modal-title {
-  color: #ff5555;
-  text-shadow: 0 0 15px rgba(255, 85, 85, 0.35);
+  color: #c0392b;
+  text-shadow: 0 0 15px rgba(192, 41, 43, 0.25);
 }
 
 .modal-text {
   margin: 0 0 25px 0;
   font-size: 0.92rem;
   line-height: 1.5;
-  color: rgba(255, 255, 255, 0.85);
+  color: #2c3e50;
 }
 
 .reset-button {

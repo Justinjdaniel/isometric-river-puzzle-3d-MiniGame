@@ -108,22 +108,27 @@ This file tracks the completion progress of the **Isometric River Crossing Puzzl
 
 ## 5. Interactive Gameplay, Raycasting, and Game Flow
 
-- [ ] **Task 17: Update Technical Specifications & Interaction Rules**
+- [x] **Task 17: Update Technical Specifications & Interaction Rules**
   - **Description**: Refine `specs.md` with mouse-click raycasting details, hover effect pointers, rotational wobble shake animations, game over custom cues, and the permanent glassmorphic "Move Boat" button.
   - **Assignee**: Sub-Agent
-  - **Status**: `[In Progress]`
+  - **Status**: `[Done]`
 
-- [ ] **Task 18: Mouse/Touch Raycasting and Hover Pointer**
+- [x] **Task 18: Mouse/Touch Raycasting and Hover Pointer**
   - **Description**: Setup standard Raycaster in `src/main.js`. Enable cursor-style pointer updates when hovering over interactive actors/kayak meshes.
   - **Assignee**: Sub-Agent
-  - **Status**: `[Todo]`
+  - **Status**: `[Done]`
 
-- [ ] **Task 19: Implement Custom Shake, Game Over, and Glide animations**
+- [x] **Task 19: Implement Custom Shake, Game Over, and Glide animations**
   - **Description**: Expand `src/render/animation.js` to support Y-axis rotational wobble shakes, Fox rearing, Sheep rapid distressed spinning, and Reset continuous glides.
   - **Assignee**: Sub-Agent
-  - **Status**: `[Todo]`
+  - **Status**: `[Done]`
 
-- [ ] **Task 20: Connect 3D Assets and UI Controls to Game State**
+- [x] **Task 20: Connect 3D Assets and UI Controls to Game State**
   - **Description**: Bind click interactions to `GameState`. Implement the permanent "Move Boat" glassmorphic button. Handle Victory/Game Over modals with 1.5s delay for Game Over. Support hidden 'D' key panel toggles.
   - **Assignee**: Sub-Agent
-  - **Status**: `[Todo]`
+  - **Status**: `[Done]`
+
+- [x] **Task 21: Visual, Spatial, & Audio Polish (Phase 5b)**
+  - **Description**: Implement 15-20% orthographic zoom-out, expand floating terrain block base by 15% (with scaled strata, foothills and mountains), add gentle floating clouds with wrapping drift, and integrate rich procedural Web Audio API synthesizers (splash, hop, buzz, victory, fail, sheep bleats, ambient wind & bird chirps) synced to the beautiful frosted glass Settings panel toggle.
+  - **Assignee**: Supervisor Agent (Jules)
+  - **Status**: `[Done]`
