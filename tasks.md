@@ -132,3 +132,12 @@ This file tracks the completion progress of the **Isometric River Crossing Puzzl
   - **Description**: Implement 15-20% orthographic zoom-out, expand floating terrain block base by 15% (with scaled strata, foothills and mountains), add gentle floating clouds with wrapping drift, and integrate rich procedural Web Audio API synthesizers (splash, hop, buzz, victory, fail, sheep bleats, ambient wind & bird chirps) synced to the beautiful frosted glass Settings panel toggle.
   - **Assignee**: Supervisor Agent (Jules)
   - **Status**: `[Done]`
+
+---
+
+## 6. HUD Layout Polish & Glassmorphism Upgrade
+
+- [x] **Task 22: HUD Restructuring and Interactive Modals**
+  - **Description**: Remove Left Panel to expand game canvas view. Add top-left floating game title. Introduce Settings Modal (gear ⚙️ button) and Instructions Modal (info ℹ️ button) as frosted glass popups. Ensure high-readability with customized background opacity, backdrop-filter blur, white border, and drop-shadows.
+  - **Assignee**: Supervisor Agent (Jules)
+  - **Status**: `[Done]` (Verified by Jules via Playwright and Unit Tests)

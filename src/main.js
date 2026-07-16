@@ -136,8 +136,9 @@ for (let i = 0; i < numClouds; i++) {
 let gameLoopLocked = false;
 let gameOverTimeout = null;
 
-// 5. Track Settings Dialog state
+// 5. Track Settings & Instructions Dialog state
 let settingsOpen = false;
+let instructionsOpen = false;
 
 // Setup Interactive Glassmorphic UI HUD Updates
 function updateUIOverlay() {
@@ -163,38 +164,14 @@ function updateUIOverlay() {
 
   const isShepherdOnBoat = gameState.actorPositions.man === 'boat';
 
-  // Let's create a beautiful rich structured Left and Right panel layout
+  // Let's create a beautiful rich structured Right panel layout with popup modals for settings & instructions
   appContainer.innerHTML = `
-    <!-- Left Panel: Dedicated Rules & Instructions Card -->
-    <div class="left-hud-panel">
-      <header class="glass-panel hud-card">
-        <div class="hud-header">
-          <h1 class="hud-title">RIVER PUZZLE 3D</h1>
-          <p class="hud-subtitle">An elegant, flat-shaded low-poly isometric brainteaser.</p>
-        </div>
+    <!-- Top-Left Floating Title Header -->
+    <div class="top-left-floating-header">
+      <header class="glass-panel hud-card" style="padding: 12px 20px;">
+        <h1 class="hud-title">RIVER PUZZLE 3D</h1>
+        <p class="hud-subtitle">Elegant low-poly brainteaser</p>
       </header>
-
-      <div class="glass-panel hud-card">
-        <h3 class="status-heading" style="margin-bottom: 12px;">📜 RULES & MISSION</h3>
-        <div class="instructions-card-content">
-          <p>Help the <strong>Shepherd</strong> safely transport the hungry <strong>Fox</strong> and the two fluffy <strong>Sheep (Sheep and Lamb)</strong> across the river to the Right Bank.</p>
-          <hr class="hud-divider" />
-          <p><strong>Safety Rules:</strong></p>
-          <ul class="rules-list">
-            <li>The Shepherd must navigate the boat.</li>
-            <li>The kayak can only hold <strong>at most 2 passengers</strong>.</li>
-            <li>If left alone on a bank without the shepherd:
-              <ul>
-                <li>The Fox will eat the Sheep.</li>
-                <li>The Fox will eat the Lamb.</li>
-              </ul>
-            </li>
-          </ul>
-          <div class="hud-rules-warning">
-            ⚠️ <strong>Warning:</strong> Left-alone combos like (Fox + Sheep) or (Fox + Lamb) trigger a GAME OVER!
-          </div>
-        </div>
-      </div>
     </div>
 
     <!-- Right Panel: Unified Stats, Game Controls, and Settings Card -->
@@ -202,9 +179,14 @@ function updateUIOverlay() {
       <div class="glass-panel hud-card">
         <div class="card-header-row">
           <h3 class="status-heading">🎮 GAME CONTROLS</h3>
-          <button class="settings-gear-btn" id="settings-trigger-btn" title="Open Settings Dialog">
-            ⚙️
-          </button>
+          <div style="display: flex; gap: 8px; align-items: center;">
+            <button class="settings-gear-btn" id="instructions-trigger-btn" title="View Mission & Rules">
+              ℹ️
+            </button>
+            <button class="settings-gear-btn" id="settings-trigger-btn" title="Open Settings Dialog">
+              ⚙️
+            </button>
+          </div>
         </div>
 
         <p class="status-item"><strong>Boat Docked:</strong> ${boatLoc}-Bank</p>
@@ -269,6 +251,36 @@ function updateUIOverlay() {
           </div>
         </div>
         <button class="reset-button" id="settings-close-btn">Close Settings</button>
+      </div>
+    </div>
+    ` : ''}
+
+    <!-- Instructions Dialog Modal -->
+    ${instructionsOpen ? `
+    <div class="modal-overlay" id="instructions-modal-overlay">
+      <div class="glass-panel terminal-modal" style="width: 480px; text-align: left;">
+        <h2 class="modal-title" style="color: #014f86; margin-bottom: 15px; text-align: center;">📜 MISSION & RULES</h2>
+        <div class="instructions-card-content">
+          <p>Help the <strong>Shepherd</strong> safely transport the hungry <strong>Fox</strong> and the two fluffy <strong>Sheep (Sheep and Lamb)</strong> across the river to the Right Bank.</p>
+          <hr class="hud-divider" />
+          <p><strong>Safety Rules:</strong></p>
+          <ul class="rules-list">
+            <li>The Shepherd must navigate the boat.</li>
+            <li>The kayak can only hold <strong>at most 2 passengers</strong>.</li>
+            <li>If left alone on a bank without the shepherd:
+              <ul>
+                <li>The Fox will eat the Sheep.</li>
+                <li>The Fox will eat the Lamb.</li>
+              </ul>
+            </li>
+          </ul>
+          <div class="hud-rules-warning" style="margin-top: 15px;">
+            ⚠️ <strong>Warning:</strong> Left-alone combos like (Fox + Sheep) or (Fox + Lamb) trigger a GAME OVER!
+          </div>
+        </div>
+        <div style="text-align: center; margin-top: 25px;">
+          <button class="reset-button" id="instructions-close-btn">Close Instructions</button>
+        </div>
       </div>
     </div>
     ` : ''}
@@ -352,6 +364,25 @@ function updateUIOverlay() {
   if (settingsCloseBtn) {
     settingsCloseBtn.addEventListener('click', () => {
       settingsOpen = false;
+      updateUIOverlay();
+    });
+  }
+
+  // Attach Instructions Toggle button listener
+  const instructionsBtn = document.getElementById('instructions-trigger-btn');
+  if (instructionsBtn) {
+    instructionsBtn.addEventListener('click', () => {
+      soundManager.init();
+      instructionsOpen = true;
+      updateUIOverlay();
+    });
+  }
+
+  // Attach Instructions Close button listener
+  const instructionsCloseBtn = document.getElementById('instructions-close-btn');
+  if (instructionsCloseBtn) {
+    instructionsCloseBtn.addEventListener('click', () => {
+      instructionsOpen = false;
       updateUIOverlay();
     });
   }

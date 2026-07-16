@@ -106,17 +106,12 @@ html, body {
   color: #ffaaaa !important;
 }
 
-/* Left Column Layout: Dedicated Rules & Instructions Panel */
-.left-hud-panel {
+/* Floating Header Layout on Top-Left */
+.top-left-floating-header {
   position: absolute;
   top: 20px;
   left: 20px;
-  bottom: 20px;
-  width: 340px;
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
-  overflow-y: auto;
+  width: 300px;
   pointer-events: auto;
 }
 
