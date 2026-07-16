@@ -16,11 +16,12 @@ This repository contains an interactive 3D isometric River Crossing puzzle game 
 
 ---
 
-## 2. Mandatory Visual Proof & Inspection Status Check
+## 2. Mandatory Visual Proof & Inspection Status Check (For Jules PRs Only)
 
-Before approving any PR, **you must scan the PR description or latest comments** for visual evidence (such as a GIF, video, or image) showing the runtime output of the changes, as well as an inspection status.
+Before approving any PR, check the author of the PR. **If the PR is created by Jules (or an AI agent operating as Jules)**, you must scan the PR description or latest comments for visual evidence (such as a GIF, video, or image) showing the runtime output of the changes, as well as an inspection status.
 
-- If the developer has **not** attached a GIF, video, or image of the PR output, or has not specified the inspection status, you **must** output this exact warning:
+- **Note**: This rule only applies to PRs created by **Jules**. Do **NOT** enforce this visual evidence or inspection status warning on PRs created by other human developers.
+- If the PR is created by **Jules**, and the PR has **not** attached a GIF, video, or image of the PR output, or has not specified the inspection status, you **must** output this exact warning:
   > ⚠️ Visual output verification pending. Please upload a GIF/video/image of your runtime output and set your Inspection Status.
 
 ---
@@ -36,5 +37,5 @@ At the bottom of every review comment or review summary, you **must** append a c
 
 ### If Verdict is WARNING / NIT (Only warnings or info messages):
 - **Review Recommendations**: Address the suggestions if you agree they improve readability/consistency, or reply to the thread with your reasoning.
-- **Visual Verification**: Ensure a GIF/video/image has been uploaded to verify visual changes.
+- **Visual Verification**: Ensure a GIF/video/image has been uploaded to verify visual changes (if this PR was created by Jules).
 - **Proceed**: If you are satisfied with the comments, you may proceed to merge the PR.
