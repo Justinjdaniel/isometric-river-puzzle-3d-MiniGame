@@ -297,9 +297,8 @@ function addStylizedRocks(scene, baseMaterial) {
     { x: 2.6, y: -0.1, z: 3.2, rx: 0.1, ry: -1.1, rz: -0.2, sx: 1.0, sy: 0.8, sz: 1.1 }
   ];
 
+  const geom = new THREE.DodecahedronGeometry(0.5, 0); // No subdivisions = 12 flat faces
   rocksData.forEach(data => {
-    // Low-poly rock shape using Dodecahedron Geometry
-    const geom = new THREE.DodecahedronGeometry(0.5, 0); // No subdivisions = 12 flat faces
     const mesh = new THREE.Mesh(geom, rockMaterial);
     mesh.position.set(data.x, data.y, data.z);
     mesh.rotation.set(data.rx, data.ry, data.rz);
@@ -396,10 +395,12 @@ function addShorePebbles(scene) {
     { x: 2.52,  y: -0.08, z:  4.2, s: 0.19, m: smallPebbleMaterial }
   ];
 
+  const geom = new THREE.DodecahedronGeometry(1, 0);
+
   pebbles.forEach((p, idx) => {
-    const geom = new THREE.DodecahedronGeometry(p.s, 0);
     const mesh = new THREE.Mesh(geom, p.m);
     mesh.position.set(p.x, p.y, p.z);
+    mesh.scale.set(p.s, p.s, p.s);
     mesh.rotation.set(
       Math.sin(idx) * 0.5,
       Math.cos(idx) * 2.0,
@@ -538,8 +539,9 @@ function addEarthStrata(scene) {
     { x:  8.04, y: -0.7, z: -4.8, sx: 0.1,  sy: 0.28, sz: 0.2 }
   ];
 
+  const geom = new THREE.BoxGeometry(1, 1, 1);
+
   clods.forEach(c => {
-    const geom = new THREE.BoxGeometry(1, 1, 1);
     const mesh = new THREE.Mesh(geom, strataMaterial);
     mesh.position.set(c.x, c.y, c.z);
     mesh.scale.set(c.sx, c.sy, c.sz);

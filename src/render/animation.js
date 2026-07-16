@@ -25,20 +25,27 @@ export function animateWater(waterMesh, elapsedTime) {
 
   const flowSpeed = 1.5; // Downstream velocity along Z-axis (longitudinal)
 
+  if (!geom.userData.originalY) {
+    geom.userData.originalY = new Float32Array(count);
+    for (let i = 0; i < count; i++) {
+      geom.userData.originalY[i] = posAttr.getY(i);
+    }
+  }
+
+  const originalY = geom.userData.originalY;
+
   for (let i = 0; i < count; i++) {
     const x = posAttr.getX(i);
-    const y = posAttr.getY(i);
+    const y = originalY[i];
     const z = posAttr.getZ(i);
 
     // In 3D BoxGeometry, the height is along local Y (1.4 units tall).
     // The top face vertices reside at local Y = +0.7.
     if (y > 0.6) {
-      const baseLocalY = 0.7;
-      // Waves flow downstream along the Z-axis by translating coordinates over time.
       const wave = Math.sin(x * 1.2 + (z - elapsedTime * flowSpeed) * 0.8) * 0.07 +
                    Math.cos((z - elapsedTime * flowSpeed * 1.4) * 1.2) * 0.04;
 
-      posAttr.setY(i, baseLocalY + wave);
+      posAttr.setY(i, y + wave);
     }
   }
 
