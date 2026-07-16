@@ -101,6 +101,7 @@ shrubCoordinates.forEach((sc, index) => {
 
 // Check rules after any movement & lock state tracking
 let gameLoopLocked = false;
+let gameOverTimeout = null;
 
 // 5. Setup Interactive Glassmorphic UI HUD Updates
 function updateUIOverlay() {
@@ -142,6 +143,7 @@ function updateUIOverlay() {
       <div class="hud-status-content">
         <h3 class="status-heading">CURRENT GAME STATE</h3>
         <p class="status-item"><strong>Boat Docked:</strong> ${boatLoc}-Bank</p>
+        <div class="status-item highlight-moves"><strong>Moves:</strong> <span class="moves-count">${gameState.moves}</span></div>
         <p class="status-item"><strong>On Boat:</strong> ${boatActors.join(', ') || '<em>Empty</em>'}</p>
 
         <div class="action-buttons-container">
@@ -204,6 +206,11 @@ function updateUIOverlay() {
   const resetBtn = document.getElementById('reset-game-btn');
   if (resetBtn) {
     resetBtn.addEventListener('click', () => {
+      if (gameOverTimeout) {
+        clearTimeout(gameOverTimeout);
+        gameOverTimeout = null;
+      }
+      gameLoopLocked = false;
       gameState.reset();
       triggerResetGlide();
       updateUIOverlay();
@@ -214,6 +221,11 @@ function updateUIOverlay() {
   const hudResetBtn = document.getElementById('hud-reset-btn');
   if (hudResetBtn) {
     hudResetBtn.addEventListener('click', () => {
+      if (gameOverTimeout) {
+        clearTimeout(gameOverTimeout);
+        gameOverTimeout = null;
+      }
+      gameLoopLocked = false;
       gameState.reset();
       triggerResetGlide();
       updateUIOverlay();
@@ -304,10 +316,11 @@ window.addEventListener('click', (e) => {
 window.addEventListener('touchend', (e) => {
   if (e.target.closest('.glass-panel') || e.target.closest('.modal-overlay')) return;
   if (e.changedTouches && e.changedTouches.length > 0) {
+    e.preventDefault();
     const touch = e.changedTouches[0];
     handleInteraction(touch.clientX, touch.clientY);
   }
-});
+}, { passive: false });
 
 // Actor click logic (State Machine binding)
 function handleActorClick(actorId) {
@@ -379,8 +392,9 @@ function checkGameLoopRules() {
     triggerGameOverCues(eatenSheep);
 
     // Delay game over modal by 1.5 seconds
-    setTimeout(() => {
+    gameOverTimeout = setTimeout(() => {
       gameLoopLocked = false;
+      gameOverTimeout = null;
       updateUIOverlay();
     }, 1500);
   }

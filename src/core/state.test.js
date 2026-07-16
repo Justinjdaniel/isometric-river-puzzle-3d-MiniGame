@@ -18,6 +18,30 @@ describe('GameState Class Unit Tests', () => {
     expect(game.checkRules()).toBe('playing');
   });
 
+  test('Moves counter increments correctly on boat moves and resets', () => {
+    expect(game.moves).toBe(0);
+
+    // Try moving boat (fails, shepherd not on boat)
+    expect(game.moveBoat()).toBe(false);
+    expect(game.moves).toBe(0);
+
+    // Load shepherd and fox (safe setup)
+    expect(game.loadToBoat('man')).toBe(true);
+    expect(game.loadToBoat('fox')).toBe(true);
+
+    // Move boat successfully
+    expect(game.moveBoat()).toBe(true);
+    expect(game.moves).toBe(1);
+
+    // Move boat back successfully
+    expect(game.moveBoat()).toBe(true);
+    expect(game.moves).toBe(2);
+
+    // Reset game
+    game.reset();
+    expect(game.moves).toBe(0);
+  });
+
   test('Loading and unloading to the boat works', () => {
     // Load man (shepherd)
     const loadManSuccess = game.loadToBoat('man');

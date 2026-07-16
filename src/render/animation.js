@@ -46,7 +46,7 @@ export function clearGameOverCues() {
 export function triggerResetGlide() {
   clearGameOverCues();
   Object.keys(actorAnims).forEach(actor => {
-    actorAnims[actor].isGliding = true;
+    actorAnims[actor].isGliding = actorAnims[actor].prevLocation !== 'left';
     actorAnims[actor].shakeTime = 0;
   });
 }
