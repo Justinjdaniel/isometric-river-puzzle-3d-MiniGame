@@ -168,10 +168,10 @@ export function setupScene(container) {
     const height = window.innerHeight || 1;
     const newAspect = width / height;
 
-    camera.left = -7.8 * newAspect;
-    camera.right = 7.8 * newAspect;
-    camera.top = 7.8;
-    camera.bottom = -7.8;
+    camera.left = -d * newAspect;
+    camera.right = d * newAspect;
+    camera.top = d;
+    camera.bottom = -d;
     camera.updateProjectionMatrix();
 
     renderer.setSize(width, height);
