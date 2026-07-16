@@ -7,7 +7,7 @@ This repository contains an interactive 3D isometric River Crossing puzzle game 
 ## 1. Technical Stack & Architecture
 
 ### Three.js & Performance
-- **Low-Poly & Flat Shading**: Ensure that 3D assets use a flat-shaded, low-poly aesthetic. Materials should use flat shading ('MeshStandardMaterial' with 'flatShading: true').
+- **Low-Poly & Flat Shading**: Ensure that 3D assets use a flat-shaded, low-poly aesthetic. Geometries should use flat shading (`MeshStandardMaterial` with `flatShading: true`).
 - **Memory Optimization**: Shared 3D geometries (such as `DodecahedronGeometry` for rocks/pebbles and `BoxGeometry` for soil clods) should be instantiated once outside render loops and reused across meshes.
 - **Deformation Decay Prevention**: Ensure any water flow or vertex deformation logic (especially in `src/render/animation.js`) caches original coordinates (e.g. lazily under `userData.originalY`) to avoid stateful deformation decay on top-face vertices over time.
 
