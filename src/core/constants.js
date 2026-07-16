@@ -1,6 +1,6 @@
 // Game layout and visual constants for the 3D Isometric River Crossing Puzzle Game
 
-export const DEVELOPER_MODE = true; // Set to false to lock characters in place for Step 4
+export const DEVELOPER_MODE = false; // Set to false to lock characters in place for Step 4
 
 export const COLORS = {
   WATER: 0x00FFFF,          // Bright brilliant cyan/turquoise water

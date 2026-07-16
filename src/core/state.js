@@ -19,6 +19,7 @@ export class GameState {
       sheep2: 'left'
     };
     this.boatLocation = 'left';
+    this.moves = 0;
   }
 
   /**
@@ -125,6 +126,7 @@ export class GameState {
 
     // Toggle boat location
     this.boatLocation = this.boatLocation === 'left' ? 'right' : 'left';
+    this.moves++;
     return true;
   }
 

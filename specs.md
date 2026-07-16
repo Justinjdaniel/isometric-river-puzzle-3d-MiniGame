@@ -25,6 +25,29 @@ This document establishes the architectural, visual, and behavioral specificatio
   - If `DEVELOPER_MODE` is enabled in `constants.js`, temporary keyboard controls allow testing:
     - `Spacebar`: Smoothly transit boat/kayak between docks.
     - Keys `1`, `2`, `3`, `4`: Board/unload Shepherd, Fox, Sheep 1, and Sheep 2.
+  - Toggled by the hidden `'D'` key, showing/hiding the `DEV DEMO CONTROLS` panel.
+  - Keyboard shortcuts are only active when the developer controls panel is visible.
+
+- **Mouse/Touch Raycasting & Hover Elements**:
+  - Use `THREE.Raycaster` to capture clicks/taps on interactive assets: Shepherd, Fox, Sheep 1, Sheep 2, and the Kayak/Boat.
+  - Asset roots are identified using `userData.actorId` tags (e.g., `'man'`, `'fox'`, `'sheep1'`, `'sheep2'`, `'boat'`).
+  - Cursor changes to `'pointer'` when hovering over any interactive actor or boat.
+
+- **Interaction Feedback & Animations**:
+  - **Successful Load/Unload**: Parabolic jump/hop with squash-and-stretch scale profile.
+  - **Successful Boat Transit**: Kayak lerps smoothly along X-axis, carrying any boarded passenger.
+  - **Invalid Move Feedback**: A quick rotational wobble/shake (Y-axis head-shake back-and-forth) to indicate a "No" visually.
+  - **Reset Glide**: A quick continuous translation glide along X and Z axes without a vertical hop, rapidly aligning all meshes back to left-bank home coordinates.
+
+- **Game Over Custom Cues**:
+  - Triggered immediately when a game-over condition evaluates.
+  - Fox does a quick rearing-up animation, tilting back on its hind legs.
+  - The targeted Sheep (the one left alone with the Fox) does a rapid distressed rotational spin.
+  - Both animations play for 1.5 seconds before showing the game-over modal, and continue playing in the background while the modal is open.
+
+- **Glassmorphic HUD Integration**:
+  - A permanent, elegant, frosted-glass "Move Boat" button is placed on the HUD.
+  - The button is dynamically enabled only when the Shepherd is on board, displaying reduced opacity and a disabled state otherwise.
 
 ## 2. State Machine Requirements
 

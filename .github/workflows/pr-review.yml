@@ -1,3 +1,18 @@
+# This workflow is temporarily disabled/commented out as requested to prevent it from executing
+# on PRs created by Jules or other collaborators to avoid feedback loops.
+#
+# name: Advanced Jules PR Reviewer
+#
+# on:
+#   pull_request:
+#     types: [opened, ready_for_review]
+#
+# jobs:
+#   review:
+#     runs-on: ubuntu-latest
+#     steps:
+#       - name: Run Reviewer
+#         uses: thalesraymond/jules-pr-reviewer@v1.2.0
 name: Jules PR Review
 
 on:

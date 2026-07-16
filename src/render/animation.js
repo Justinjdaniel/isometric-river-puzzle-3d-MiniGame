@@ -2,13 +2,54 @@ import * as THREE from 'three';
 import { BOUNDS, POSITIONS, BOAT_SEATS, getBankPosition, DEVELOPER_MODE, SPEED } from '../core/constants.js';
 
 // Track animation states for actors
-// Each actor can have: { startPos: Vector3, startRotY: number, progress: number, animating: boolean, prevLocation: string }
+// Each actor can have: { startPos: Vector3, startRotY: number, progress: number, animating: boolean, prevLocation: string, shakeTime: number, isGliding: boolean }
 const actorAnims = {
-  man: { startPos: new THREE.Vector3(), startRotY: 0, progress: 1.0, animating: false, prevLocation: 'left' },
-  fox: { startPos: new THREE.Vector3(), startRotY: 0, progress: 1.0, animating: false, prevLocation: 'left' },
-  sheep1: { startPos: new THREE.Vector3(), startRotY: 0, progress: 1.0, animating: false, prevLocation: 'left' },
-  sheep2: { startPos: new THREE.Vector3(), startRotY: 0, progress: 1.0, animating: false, prevLocation: 'left' }
+  man: { startPos: new THREE.Vector3(), startRotY: 0, progress: 1.0, animating: false, prevLocation: 'left', shakeTime: 0, isGliding: false },
+  fox: { startPos: new THREE.Vector3(), startRotY: 0, progress: 1.0, animating: false, prevLocation: 'left', shakeTime: 0, isGliding: false },
+  sheep1: { startPos: new THREE.Vector3(), startRotY: 0, progress: 1.0, animating: false, prevLocation: 'left', shakeTime: 0, isGliding: false },
+  sheep2: { startPos: new THREE.Vector3(), startRotY: 0, progress: 1.0, animating: false, prevLocation: 'left', shakeTime: 0, isGliding: false }
 };
+
+// Track game over visual cue states
+let gameOverState = { active: false, eatenSheep: null };
+
+/**
+ * Triggers a subtle rotational shake animation on the actor.
+ * @param {string} actor
+ */
+export function triggerShake(actor) {
+  if (actorAnims[actor]) {
+    actorAnims[actor].shakeTime = 0.4; // 0.4 seconds of high-frequency Y wobbling
+  }
+}
+
+/**
+ * Triggers the custom game over animations for Fox and Sheep.
+ * @param {string} eatenSheep - 'sheep1' or 'sheep2'
+ */
+export function triggerGameOverCues(eatenSheep) {
+  gameOverState.active = true;
+  gameOverState.eatenSheep = eatenSheep;
+}
+
+/**
+ * Clears any active game over visual cues.
+ */
+export function clearGameOverCues() {
+  gameOverState.active = false;
+  gameOverState.eatenSheep = null;
+}
+
+/**
+ * Initiates a rapid reset glide transition back to the left bank.
+ */
+export function triggerResetGlide() {
+  clearGameOverCues();
+  Object.keys(actorAnims).forEach(actor => {
+    actorAnims[actor].isGliding = actorAnims[actor].prevLocation !== 'left';
+    actorAnims[actor].shakeTime = 0;
+  });
+}
 
 /**
  * CPU-based water plane vertex wave displacement.
@@ -97,6 +138,12 @@ export function updateAnimations(delta, elapsedTime, boatMesh, actorMeshes, game
     const animState = actorAnims[actor];
 
     // Detect state changes to trigger a "hop" animation
+    // Update shake timer if active
+    if (animState.shakeTime > 0) {
+      animState.shakeTime -= delta;
+      if (animState.shakeTime < 0) animState.shakeTime = 0;
+    }
+
     if (currentLocation !== animState.prevLocation) {
       // Store current physical world position as the animation start position
       mesh.getWorldPosition(animState.startPos);
@@ -134,51 +181,80 @@ export function updateAnimations(delta, elapsedTime, boatMesh, actorMeshes, game
     const baseScaleZ = mesh.userData.baseScaleZ || (mesh.userData.baseScaleZ = mesh.scale.z);
 
     if (animState.animating) {
-      // Progress the hop animation
-      animState.progress += delta * SPEED.ANIMATION;
+      // Glides are much faster than standard boarding hops
+      const speedMult = animState.isGliding ? 10.0 : SPEED.ANIMATION;
+      animState.progress += delta * speedMult;
       const t = Math.min(animState.progress, 1.0);
 
       // Linear interpolation for X and Z
       const currentX = THREE.MathUtils.lerp(animState.startPos.x, targetX, t);
       const currentZ = THREE.MathUtils.lerp(animState.startPos.z, targetZ, t);
 
-      // Parabolic arc for Y (the vertical hop)
-      const hopHeight = 1.1; // Max height of the jump
-      const arcY = THREE.MathUtils.lerp(animState.startPos.y, targetY, t) + Math.sin(t * Math.PI) * hopHeight;
-
-      mesh.position.set(currentX, arcY, currentZ);
-
-      // Squash and stretch scale deformation:
-      // - Stretch in mid-air (t < 0.82): Y expands, X/Z contract
-      // - Squash on impact landing (t >= 0.82): Y contracts, X/Z expand
-      let scaleYMult = 1.0;
-      if (t < 0.82) {
-        const midAirT = t / 0.82;
-        scaleYMult = 1.0 + Math.sin(midAirT * Math.PI) * 0.16; // Up to 1.16x stretching
+      let currentY;
+      if (animState.isGliding) {
+        // Fast, direct linear glide without jump arc or squash/stretch
+        currentY = THREE.MathUtils.lerp(animState.startPos.y, targetY, t);
+        mesh.scale.set(baseScaleX, baseScaleY, baseScaleZ);
+        mesh.rotation.set(0, THREE.MathUtils.lerp(animState.startRotY || 0, targetRotY, t), 0);
       } else {
-        const landingT = (t - 0.82) / 0.18;
-        scaleYMult = 1.0 - Math.sin(landingT * Math.PI) * 0.16; // Down to 0.84x squashing
+        // Parabolic arc for Y (the vertical hop)
+        const hopHeight = 1.1; // Max height of the jump
+        currentY = THREE.MathUtils.lerp(animState.startPos.y, targetY, t) + Math.sin(t * Math.PI) * hopHeight;
+
+        // Squash and stretch scale deformation:
+        // - Stretch in mid-air (t < 0.82): Y expands, X/Z contract
+        // - Squash on impact landing (t >= 0.82): Y contracts, X/Z expand
+        let scaleYMult = 1.0;
+        if (t < 0.82) {
+          const midAirT = t / 0.82;
+          scaleYMult = 1.0 + Math.sin(midAirT * Math.PI) * 0.16; // Up to 1.16x stretching
+        } else {
+          const landingT = (t - 0.82) / 0.18;
+          scaleYMult = 1.0 - Math.sin(landingT * Math.PI) * 0.16; // Down to 0.84x squashing
+        }
+        const scaleXZMult = 2.0 - scaleYMult; // Inversely scale to preserve volume
+
+        mesh.scale.set(
+          baseScaleX * scaleXZMult,
+          baseScaleY * scaleYMult,
+          baseScaleZ * scaleXZMult
+        );
+
+        // Smoothly interpolate to target rotation and add a playful spin in the middle
+        mesh.rotation.set(0, THREE.MathUtils.lerp(animState.startRotY || 0, targetRotY, t) + Math.sin(t * Math.PI) * Math.PI * 2, 0);
       }
-      const scaleXZMult = 2.0 - scaleYMult; // Inversely scale to preserve volume
 
-      mesh.scale.set(
-        baseScaleX * scaleXZMult,
-        baseScaleY * scaleYMult,
-        baseScaleZ * scaleXZMult
-      );
-
-      // Smoothly interpolate to target rotation and add a playful spin in the middle
-      mesh.rotation.y = THREE.MathUtils.lerp(animState.startRotY || 0, targetRotY, t) + Math.sin(t * Math.PI) * Math.PI * 2;
+      mesh.position.set(currentX, currentY, currentZ);
 
       if (t >= 1.0) {
         animState.animating = false;
+        animState.isGliding = false;
         mesh.scale.set(baseScaleX, baseScaleY, baseScaleZ);
+        mesh.rotation.set(0, targetRotY, 0);
       }
     } else {
       // No active animation, lock position and scale to exact targets
       mesh.position.set(targetX, targetY, targetZ);
-      mesh.rotation.y = targetRotY;
+      mesh.rotation.set(0, targetRotY, 0);
       mesh.scale.set(baseScaleX, baseScaleY, baseScaleZ);
+
+      // Apply shake head-wobble if active
+      if (animState.shakeTime > 0) {
+        mesh.rotation.y = targetRotY + Math.sin(elapsedTime * 40) * 0.25;
+      }
+
+      // Apply game over visual cues (raging/tilting fox & spinning distress sheep)
+      if (gameOverState.active) {
+        if (actor === 'fox') {
+          // Tilt back on hind legs
+          mesh.rotation.z = 0.5 + Math.sin(elapsedTime * 10) * 0.08;
+          mesh.position.y = targetY + 0.15;
+        } else if (actor === gameOverState.eatenSheep) {
+          // Distressed rapid spin on Y-axis and high speed hopping jitter
+          mesh.rotation.y = targetRotY + elapsedTime * 15.0;
+          mesh.position.y = targetY + Math.abs(Math.sin(elapsedTime * 20)) * 0.25;
+        }
+      }
     }
   });
 }
@@ -196,22 +272,33 @@ export function resetAnimations() {
 }
 
 /**
- * Setup keyboard event listeners for Developer Demo Mode.
+ * Setup keyboard event listeners for Developer Demo Mode and hidden 'D' key toggle.
  * Allows testing boat transit and loading/unloading of individual actors.
  * @param {GameState} gameState - The game state instance
  * @param {Function} onStateChanged - Callback triggered on successful actions to refresh overlays
  */
 export function setupKeyboardControls(gameState, onStateChanged) {
-  if (!DEVELOPER_MODE) return;
+  // Always set devPanelVisible to false initially as requested
+  window.devPanelVisible = false;
 
-  console.log('[Animation] Developer Demo Mode enabled. Controls:');
-  console.log(' - Spacebar: Move Boat / Kayak');
-  console.log(' - Key 1: Load/Unload Shepherd ("man")');
-  console.log(' - Key 2: Load/Unload Fox');
-  console.log(' - Key 3: Load/Unload Sheep 1');
-  console.log(' - Key 4: Load/Unload Sheep 2');
+  console.log('[Animation] Key listeners loaded:');
+  console.log(' - Press "D" to toggle Developer Demo Controls panel & activate hotkeys');
 
   window.addEventListener('keydown', (e) => {
+    // Hidden toggle: D key toggles the dev controls panel
+    if (e.code === 'KeyD') {
+      e.preventDefault();
+      window.devPanelVisible = !window.devPanelVisible;
+      console.log(`[Demo] Developer controls panel visibility: ${window.devPanelVisible}`);
+      if (typeof onStateChanged === 'function') {
+        onStateChanged();
+      }
+      return;
+    }
+
+    // Keyboard shortcuts ONLY work when the panel is visible
+    if (!window.devPanelVisible) return;
+
     let changed = false;
 
     switch (e.code) {
