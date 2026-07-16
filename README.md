@@ -10,7 +10,7 @@ To maintain high visual quality and functional standards, pull requests created 
    - Upload this media directly to the pull request description or in a comment.
 
 2. **Inspection Status**:
-   - Declare the **Inspection Status** in the pull request description.
+   - Declare the **Inspection Status** in the pull request description or in a comment.
    - Example format: `Inspection Status: Verified manually / Visual layout checks passed`.
 
 The automated **Jules PR Reviewer** action will check for this visual proof and inspection status on Jules-created pull requests. If either is missing, it will raise a warning:
