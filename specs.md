@@ -6,12 +6,25 @@ This document establishes the architectural, visual, and behavioral specificatio
 
 - **Projection**: Isometric projection using an orthographic camera (`THREE.OrthographicCamera`).
 - **Coordinate Alignments**:
-  - **Left Bank**: Coordinates negative on the X-axis (e.g., $X \in [-10, -3]$).
-  - **River Channel**: Coordinates near the center (e.g., $X \in [-3, 3]$).
-  - **Right Bank**: Coordinates positive on the X-axis (e.g., $X \in [3, 10]$).
-  - **Z-Axis**: Represents the depth of the valley (e.g., $Z \in [-5, 5]$).
-  - **Y-Axis**: Height axis ($Y = 0$ is the water surface, positive $Y$ represents land/meadows/mountains).
-- **Floating Chunk Base**: The world is a circular or square floating rock structure with vertical cutouts down into a dark void.
+  - **Floating Chunk Total Dimensions**: Width 16.0 units (X-axis, $X \in [-8.0, 8.0]$), Depth 12.0 units (Z-axis, $Z \in [-6.0, 6.0]$), Height/Void Depth 3.0 units deep (Y-axis, extruded from $Y = 0.0$ down to $Y = -3.0$).
+  - **Left Bank**: $X \le -2.5$ (Grass top height $Y = 0.0$).
+  - **River Channel**: Spans from $X = -2.5$ to $X = 2.5$. Water plane sits slightly below the grass level at $Y = -0.1$ to prevent Z-fighting.
+  - **Right Bank**: $X \ge 2.5$ (Grass top height $Y = 0.0$).
+  - **Z-Axis**: Represents depth ($Z \in [-6, 6]$).
+  - **Y-Axis**: Height axis ($Y = 0$ is land surface, positive $Y$ represents assets/characters/mountains, negative $Y$ is floating chunk base and void).
+  - **Docks**: Placed at $X = -2.5$ and $X = 2.5$, extending slightly over water at height $Y = 0.05$.
+- **Floating Chunk Base**: The world is a clean, modular rectangular block with top grass-green faces and dark, earthy, rocky vertical sides extending downwards into the blackness.
+
+- **Actor Starting Offsets on Left Bank**:
+  - **Shepherd ('man')**: $X = -4.5$, $Y = 0.0$, $Z = 0.0$ (Closest to dock)
+  - **Fox**: $X = -5.5$, $Y = 0.0$, $Z = -2.0$ (Keeping its distance)
+  - **Sheep 1**: $X = -5.5$, $Y = 0.0$, $Z = 2.0$
+  - **Sheep 2**: $X = -6.5$, $Y = 0.0$, $Z = 0.5$ (Visual lamb distinction: scaled down to 0.85, rotated differently)
+
+- **Developer Demo Mode**:
+  - If `DEVELOPER_MODE` is enabled in `constants.js`, temporary keyboard controls allow testing:
+    - `Spacebar`: Smoothly transit boat/kayak between docks.
+    - Keys `1`, `2`, `3`, `4`: Board/unload Shepherd, Fox, Sheep 1, and Sheep 2.
 
 ## 2. State Machine Requirements
 
@@ -41,13 +54,29 @@ The puzzle follows the classic river crossing riddle (Shepherd/Man, Two Sheep, a
   - `actorPositions`: Object mapping `'man'`, `'fox'`, `'sheep1'`, `'sheep2'` to `'left'`, `'boat'`, or `'right'`.
   - `boatLocation`: `'left'` or `'right'`.
 
-## 3. Aesthetic Style
+## 3. Aesthetic Style & Visual Specifications (Vibrant Sunlit Day)
 
 - **Low-Poly Art Design**:
   - Faceted look, no smooth shading. Apply `flatShading: true` to all materials.
   - Landmasses and floating chunks built with stylized, randomized sharp vertices.
   - Trees built from basic geometry (cylinders for trunks, stacked cones/tetrahedrons for foliage).
   - River animated with slight wave vertex displacements or simple vertex shader offsets.
+- **Vibrant Sunlit Lighting Model**:
+  - Shifted from a dim, moody aesthetic to a bright, vibrant, sunlit daytime scene.
+  - **Sky/Background**: Set to a soft pastel sky-blue (`#E0F7FA`), making the diorama look like it's drifting in a breeze.
+  - **Fog**: Subtle atmospheric exp2 fog (`THREE.FogExp2` with `#E0F7FA`, density `0.015`) to blend distant mountains.
+  - **Water**: Clear turquoise hue (`#33EEFF` or `#00CCCC`) with a stylized, glassy reflection. Waves flow downstream (longitudinally along the Z-axis) over time.
+  - **Grass**: Vibrant, rich, sunlit grass green (`#55CC55`).
+  - **Rock Cutout**: Lighter, warm-toned rocky brown/earth texture.
+  - **AmbientLight**: Globally lightened shadows using a strong AmbientLight (intensity `0.85+` with light-blue sky color).
+  - **DirectionalLight**: A high-intensity main sunlight (intensity `1.6+` using warm color `#FFFCEB`) casting sharp, well-defined shadows that create depth across the low-poly terrain block.
+- **Detailed Asset Polish**:
+  - **Shepherd**: Deep blue coat, dark grey/black brimmed hat with brown leather band, holding a simple brown cylinder walking staff.
+  - **Sheep & Lamb**: Soft floppy blocky ears, black-and-white spherical beady eyes on a dark face.
+  - **Fox**: Black paws/socks on lower legs, white chest, white tail tip.
+  - **Conifer Trees**: Symmetrical three-tiered design with random scales (0.8x to 1.3x) and 3 distinct pine green tones (`light pine`, `classic pine`, `deep forest`).
+- **Boarding Hops (Squash & Stretch)**:
+  - Playful parabolic jump animations scale dynamically: stretching vertically (Y-scale up to 1.16x) in flight, and squashing on landing (Y-scale down to 0.84x) before returning to base size, while conserving volume on X/Z axes.
 - **Glassmorphic UI**:
   - Overlaid HUD, menus, and win/fail modals.
   - Transparent frosted glass aesthetic (`backdrop-filter: blur(10px); background: rgba(255, 255, 255, 0.15)`).
