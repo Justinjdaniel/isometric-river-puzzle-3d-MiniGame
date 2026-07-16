@@ -2,10 +2,10 @@ import * as THREE from 'three';
 import { COLORS, BOUNDS } from '../core/constants.js';
 
 export function setupScene(container) {
-  // 1. Create Scene with pastel sky-blue color and subtle atmospheric fog
+  // 1. Create Scene with subtle atmospheric fog and transparent background
   const scene = new THREE.Scene();
-  scene.background = new THREE.Color(COLORS.SKY_AMBIENT);
-  scene.fog = new THREE.FogExp2(COLORS.SKY_AMBIENT, 0.015);
+  scene.background = null; // Transparent scene background to let CSS gradient show through
+  scene.fog = new THREE.FogExp2(COLORS.SKY_AMBIENT, 0.012);
 
   // 2. Camera Setup (Orthographic Camera for Isometric Projection)
   const aspect = window.innerWidth / (window.innerHeight || 1);
@@ -21,7 +21,8 @@ export function setupScene(container) {
   camera.lookAt(0, -0.5, 0);
 
   // 3. Renderer Setup
-  const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
+  const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: 'high-performance' });
+  renderer.setClearColor(0x000000, 0); // Set clearColor to fully transparent
   renderer.setSize(window.innerWidth, window.innerHeight);
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
   renderer.shadowMap.enabled = true;
@@ -328,12 +329,12 @@ function createBackgroundMountains(scene) {
   });
 
   // Mountain data (x, y, z, height, radius, sides)
-  // Adjusted coordinates slightly to be inside the newly expanded CHUNK_WIDTH (18.4) and CHUNK_DEPTH (13.8) bounds!
+  // Adjusted coordinates slightly to sit securely on top of the newly expanded CHUNK_WIDTH (22.0) and CHUNK_DEPTH (16.5) bounds!
   const mountainList = [
-    { x: -9.2, y: -1.0, z: -7.5, h: 9.5, r: 4.5 },
-    { x: -4.0, y: -1.5, z: -8.0, h: 7.0, r: 3.5 },
-    { x: 4.5, y: -1.0, z: -7.5, h: 10.0, r: 5.0 },
-    { x: 9.7, y: -1.2, z: -7.8, h: 8.5, r: 4.0 }
+    { x: -8.5, y: -1.0, z: -4.5, h: 9.5, r: 3.5 },
+    { x: -4.2, y: -1.5, z: -4.8, h: 7.0, r: 2.8 },
+    { x: 4.5, y: -1.0, z: -4.5, h: 10.0, r: 3.8 },
+    { x: 8.8, y: -1.2, z: -4.8, h: 8.5, r: 3.2 }
   ];
 
   mountainList.forEach(m => {

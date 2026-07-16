@@ -68,8 +68,8 @@ export const ROTATIONS = {
 };
 
 export const BOUNDS = {
-  CHUNK_WIDTH: 18.4,  // Expanded by 15% (from 16.0)
-  CHUNK_DEPTH: 13.8,  // Expanded by 15% (from 12.0)
+  CHUNK_WIDTH: 22.0,  // Expanded further by ~20% (from 18.4) to 22.0
+  CHUNK_DEPTH: 16.5,  // Expanded further by ~20% (from 13.8) to 16.5
   CHUNK_HEIGHT: 3.0,
   RIVER_WIDTH: 5.0, // X spans from -2.5 to 2.5
   DOCK_X: 2.5,      // Placed at X = -2.5 and X = 2.5

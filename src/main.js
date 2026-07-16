@@ -482,6 +482,20 @@ window.addEventListener('touchend', (e) => {
   }
 }, { passive: false });
 
+// 5c. Mouse Wheel Zoom for Orthographic Camera
+window.addEventListener('wheel', (e) => {
+  // Prevent default scroll behavior inside canvas
+  if (e.target.closest('#canvas-container') || e.target.tagName === 'CANVAS') {
+    e.preventDefault();
+  }
+
+  // Adjust camera.zoom based on event.deltaY
+  camera.zoom -= e.deltaY * 0.001;
+  // Clamp camera.zoom between 0.6x and 1.8x
+  camera.zoom = Math.max(0.6, Math.min(1.8, camera.zoom));
+  camera.updateProjectionMatrix();
+}, { passive: false });
+
 // Actor click logic (State Machine binding)
 function handleActorClick(actorId) {
   const currentPos = gameState.actorPositions[actorId];
