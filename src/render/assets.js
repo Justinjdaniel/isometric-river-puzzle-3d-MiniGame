@@ -343,6 +343,60 @@ export function createShepherd() {
 }
 
 /**
+ * Creates a beautiful low-poly cloud asset using a cluster of 3-4 simple,
+ * flat-shaded, soft white/grey boxes of varying sizes.
+ * @returns {THREE.Group}
+ */
+export function createCloud() {
+  const cloudGroup = new THREE.Group();
+
+  const cloudMaterial = new THREE.MeshStandardMaterial({
+    color: 0xF0F4F8, // Soft white/grey
+    flatShading: true,
+    roughness: 0.95,
+    metalness: 0.05
+  });
+
+  // Create a randomized cluster of 3 or 4 boxes
+  const numBoxes = 3 + Math.floor(Math.random() * 2); // 3 or 4 boxes
+  const boxGeom = new THREE.BoxGeometry(1, 1, 1);
+
+  for (let i = 0; i < numBoxes; i++) {
+    const box = new THREE.Mesh(boxGeom, cloudMaterial);
+
+    // Vary size and relative offset for organic clustering
+    let sx, sy, sz;
+    let ox, oy, oz;
+
+    if (i === 0) {
+      // Main central core box
+      sx = 1.4 + Math.random() * 0.4;
+      sy = 0.8 + Math.random() * 0.3;
+      sz = 0.9 + Math.random() * 0.3;
+      ox = oy = oz = 0;
+    } else {
+      // Side overlapping boxes
+      sx = 0.8 + Math.random() * 0.5;
+      sy = 0.6 + Math.random() * 0.3;
+      sz = 0.7 + Math.random() * 0.4;
+
+      // Position offset relative to core
+      ox = (Math.random() - 0.5) * 1.4;
+      oy = (Math.random() - 0.5) * 0.2;
+      oz = (Math.random() - 0.5) * 0.8;
+    }
+
+    box.scale.set(sx, sy, sz);
+    box.position.set(ox, oy, oz);
+    box.castShadow = true;
+    box.receiveShadow = true;
+    cloudGroup.add(box);
+  }
+
+  return cloudGroup;
+}
+
+/**
  * Creates a stylized cute low-poly shrub/bush.
  * @param {number} scale - Scale multiplier for the shrub
  * @param {number} shadeIndex - Pick a stable green shade from the TREE_GREENS array

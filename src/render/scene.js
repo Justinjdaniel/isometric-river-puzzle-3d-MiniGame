@@ -2,14 +2,14 @@ import * as THREE from 'three';
 import { COLORS, BOUNDS } from '../core/constants.js';
 
 export function setupScene(container) {
-  // 1. Create Scene with pastel sky-blue color and subtle atmospheric fog
+  // 1. Create Scene with subtle atmospheric fog and transparent background
   const scene = new THREE.Scene();
-  scene.background = new THREE.Color(COLORS.SKY_AMBIENT);
-  scene.fog = new THREE.FogExp2(COLORS.SKY_AMBIENT, 0.015);
+  scene.background = null; // Transparent scene background to let CSS gradient show through
+  scene.fog = new THREE.FogExp2(COLORS.SKY_AMBIENT, 0.012);
 
   // 2. Camera Setup (Orthographic Camera for Isometric Projection)
   const aspect = window.innerWidth / (window.innerHeight || 1);
-  const d = 6.5; // Adjusted zoom/view size factor to fit the 16x12 floating chunk beautifully
+  const d = 7.8; // Adjusted zoom out factor by ~20% (from 6.5 to 7.8) to give entire island some breathing room
   const camera = new THREE.OrthographicCamera(
     -d * aspect, d * aspect,
     d, -d,
@@ -17,11 +17,12 @@ export function setupScene(container) {
   );
 
   // Classic Isometric position
-  camera.position.set(12, 12, 12);
+  camera.position.set(14.4, 14.4, 14.4); // slightly adjusted for the larger zoom out to keep perfect proportions
   camera.lookAt(0, -0.5, 0);
 
   // 3. Renderer Setup
-  const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
+  const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: 'high-performance' });
+  renderer.setClearColor(0x000000, 0); // Set clearColor to fully transparent
   renderer.setSize(window.innerWidth, window.innerHeight);
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
   renderer.shadowMap.enabled = true;
@@ -328,11 +329,12 @@ function createBackgroundMountains(scene) {
   });
 
   // Mountain data (x, y, z, height, radius, sides)
+  // Adjusted coordinates slightly to sit securely on top of the newly expanded CHUNK_WIDTH (22.0) and CHUNK_DEPTH (16.5) bounds!
   const mountainList = [
-    { x: -8.0, y: -1.0, z: -6.5, h: 8.5, r: 4.0 },
-    { x: -3.5, y: -1.5, z: -7.0, h: 6.0, r: 3.0 },
-    { x: 4.0, y: -1.0, z: -6.5, h: 9.0, r: 4.5 },
-    { x: 8.5, y: -1.2, z: -6.8, h: 7.5, r: 3.5 }
+    { x: -8.5, y: -1.0, z: -4.5, h: 9.5, r: 3.5 },
+    { x: -4.2, y: -1.5, z: -4.8, h: 7.0, r: 2.8 },
+    { x: 4.5, y: -1.0, z: -4.5, h: 10.0, r: 3.8 },
+    { x: 8.8, y: -1.2, z: -4.8, h: 8.5, r: 3.2 }
   ];
 
   mountainList.forEach(m => {
@@ -489,24 +491,31 @@ function addEarthStrata(scene) {
     roughness: 0.95
   });
 
+  const w = BOUNDS.CHUNK_WIDTH;
+  const d = BOUNDS.CHUNK_DEPTH;
+  const halfW = w / 2;
+  const halfD = d / 2;
+  const bankW = (w - BOUNDS.RIVER_WIDTH) / 2;
+  const bankCenter = BOUNDS.RIVER_WIDTH / 2 + bankW / 2;
+
   const strataBands = [
-    // 1. Front cutouts (at Z = 6.01, spanning along X)
-    // Left front bank: X from -8 to -2.5 (centered at -5.25), Y = -1.2, height = 0.15
-    { x: -5.25, y: -1.2, z: 6.01, w: 5.5, h: 0.15, d: 0.06, m: strataMaterial },
-    { x: -5.25, y: -2.2, z: 6.01, w: 5.5, h: 0.18, d: 0.06, m: coalMaterial },
-    // Right front bank: X from 2.5 to 8 (centered at 5.25)
-    { x: 5.25,  y: -1.2, z: 6.01, w: 5.5, h: 0.15, d: 0.06, m: strataMaterial },
-    { x: 5.25,  y: -2.2, z: 6.01, w: 5.5, h: 0.18, d: 0.06, m: coalMaterial },
+    // 1. Front cutouts (at Z = halfD + 0.01, spanning along X)
+    // Left front bank: X from -w/2 to -2.5 (centered at -bankCenter), Y = -1.2, height = 0.15
+    { x: -bankCenter, y: -1.2, z: halfD + 0.01, w: bankW, h: 0.15, d: 0.06, m: strataMaterial },
+    { x: -bankCenter, y: -2.2, z: halfD + 0.01, w: bankW, h: 0.18, d: 0.06, m: coalMaterial },
+    // Right front bank: X from 2.5 to w/2 (centered at bankCenter)
+    { x: bankCenter,  y: -1.2, z: halfD + 0.01, w: bankW, h: 0.15, d: 0.06, m: strataMaterial },
+    { x: bankCenter,  y: -2.2, z: halfD + 0.01, w: bankW, h: 0.18, d: 0.06, m: coalMaterial },
     // Riverbed front cutout: X from -2.5 to 2.5 (centered at 0), Y = -2.6, height = 0.12
-    { x: 0.0,   y: -2.6, z: 6.01, w: 5.0, h: 0.12, d: 0.06, m: coalMaterial },
+    { x: 0.0,   y: -2.6, z: halfD + 0.01, w: 5.0, h: 0.12, d: 0.06, m: coalMaterial },
 
-    // 2. Far Left cutout face (at X = -8.01, spanning along Z)
-    { x: -8.01, y: -1.5, z: 0.0, w: 0.06, h: 0.22, d: 12.0, m: strataMaterial },
-    { x: -8.01, y: -2.5, z: 2.0, w: 0.06, h: 0.15, d: 8.0,  m: coalMaterial },
+    // 2. Far Left cutout face (at X = -halfW - 0.01, spanning along Z)
+    { x: -halfW - 0.01, y: -1.5, z: 0.0, w: 0.06, h: 0.22, d: d, m: strataMaterial },
+    { x: -halfW - 0.01, y: -2.5, z: 2.0, w: 0.06, h: 0.15, d: d * 0.65,  m: coalMaterial },
 
-    // 3. Far Right cutout face (at X = 8.01, spanning along Z)
-    { x: 8.01,  y: -1.5, z: 0.0, w: 0.06, h: 0.22, d: 12.0, m: strataMaterial },
-    { x: 8.01,  y: -2.5, z: -2.0, w: 0.06, h: 0.15, d: 8.0,  m: coalMaterial }
+    // 3. Far Right cutout face (at X = halfW + 0.01, spanning along Z)
+    { x: halfW + 0.01,  y: -1.5, z: 0.0, w: 0.06, h: 0.22, d: d, m: strataMaterial },
+    { x: halfW + 0.01,  y: -2.5, z: -2.0, w: 0.06, h: 0.15, d: d * 0.65,  m: coalMaterial }
   ];
 
   strataBands.forEach(band => {
@@ -521,22 +530,22 @@ function addEarthStrata(scene) {
   // 4. Protruding blocky mud/earth clods and jagged rocks sticking out of vertical faces
   const clods = [
     // Front face clods
-    { x: -6.5, y: -1.6, z: 6.04, sx: 0.25, sy: 0.2, sz: 0.12 },
-    { x: -3.8, y: -0.8, z: 6.04, sx: 0.3,  sy: 0.3, sz: 0.1 },
-    { x: -4.8, y: -2.4, z: 6.04, sx: 0.2,  sy: 0.2, sz: 0.14 },
-    { x:  3.5, y: -1.8, z: 6.04, sx: 0.28, sy: 0.22, sz: 0.12 },
-    { x:  6.2, y: -0.9, z: 6.04, sx: 0.32, sy: 0.28, sz: 0.1 },
-    { x:  4.5, y: -2.3, z: 6.04, sx: 0.18, sy: 0.18, sz: 0.15 },
+    { x: -bankCenter - 1.0, y: -1.6, z: halfD + 0.04, sx: 0.25, sy: 0.2, sz: 0.12 },
+    { x: -bankCenter + 1.5, y: -0.8, z: halfD + 0.04, sx: 0.3,  sy: 0.3, sz: 0.1 },
+    { x: -bankCenter + 0.2, y: -2.4, z: halfD + 0.04, sx: 0.2,  sy: 0.2, sz: 0.14 },
+    { x:  bankCenter - 1.5, y: -1.8, z: halfD + 0.04, sx: 0.28, sy: 0.22, sz: 0.12 },
+    { x:  bankCenter + 1.2, y: -0.9, z: halfD + 0.04, sx: 0.32, sy: 0.28, sz: 0.1 },
+    { x:  bankCenter - 0.5, y: -2.3, z: halfD + 0.04, sx: 0.18, sy: 0.18, sz: 0.15 },
 
     // Far Left face clods
-    { x: -8.04, y: -1.0, z: -3.2, sx: 0.12, sy: 0.24, sz: 0.3 },
-    { x: -8.04, y: -2.1, z:  1.5, sx: 0.15, sy: 0.18, sz: 0.25 },
-    { x: -8.04, y: -0.6, z:  4.2, sx: 0.1,  sy: 0.3,  sz: 0.2 },
+    { x: -halfW - 0.04, y: -1.0, z: -3.2, sx: 0.12, sy: 0.24, sz: 0.3 },
+    { x: -halfW - 0.04, y: -2.1, z:  1.5, sx: 0.15, sy: 0.18, sz: 0.25 },
+    { x: -halfW - 0.04, y: -0.6, z:  4.2, sx: 0.1,  sy: 0.3,  sz: 0.2 },
 
     // Far Right face clods
-    { x:  8.04, y: -1.1, z: -2.5, sx: 0.12, sy: 0.25, sz: 0.32 },
-    { x:  8.04, y: -2.3, z:  3.0, sx: 0.15, sy: 0.2,  sz: 0.22 },
-    { x:  8.04, y: -0.7, z: -4.8, sx: 0.1,  sy: 0.28, sz: 0.2 }
+    { x:  halfW + 0.04, y: -1.1, z: -2.5, sx: 0.12, sy: 0.25, sz: 0.32 },
+    { x:  halfW + 0.04, y: -2.3, z:  3.0, sx: 0.15, sy: 0.2,  sz: 0.22 },
+    { x:  halfW + 0.04, y: -0.7, z: -4.8, sx: 0.1,  sy: 0.28, sz: 0.2 }
   ];
 
   const geom = new THREE.BoxGeometry(1, 1, 1);

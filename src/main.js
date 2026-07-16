@@ -1,9 +1,10 @@
 import * as THREE from 'three';
 import { setupScene } from './render/scene.js';
-import { createTree, createKayak, createShepherd, createFox, createSheep, createShrub } from './render/assets.js';
+import { createTree, createKayak, createShepherd, createFox, createSheep, createShrub, createCloud } from './render/assets.js';
 import { animateWater, updateAnimations, setupKeyboardControls, resetAnimations, triggerShake, triggerGameOverCues, clearGameOverCues, triggerResetGlide } from './render/animation.js';
 import { GameState } from './core/state.js';
 import { DEVELOPER_MODE } from './core/constants.js';
+import { soundManager } from './core/audio.js';
 import './style.css';
 
 // 1. Initialize Headless Game State
@@ -99,11 +100,48 @@ shrubCoordinates.forEach((sc, index) => {
   scene.add(shrub);
 });
 
+// 4c. Spawn Floating Clouds in the air near the mountain peaks
+const clouds = [];
+const numClouds = 4;
+const cloudMinX = -11.0;
+const cloudMaxX = 11.0;
+
+for (let i = 0; i < numClouds; i++) {
+  const cloudMesh = createCloud();
+
+  // Distribute clouds along the X-axis initially
+  const initialX = cloudMinX + ((cloudMaxX - cloudMinX) / numClouds) * i + (Math.random() - 0.5) * 2.0;
+  // Position above the peaks (mountain peaks are ~6-10 units tall, so let's put clouds at Y = 5.5 to 7.8)
+  const initialY = 5.5 + Math.random() * 2.3;
+  // Position slightly behind the docks/valley (Z = -4.0 to -7.5)
+  const initialZ = -3.5 - Math.random() * 4.0;
+
+  cloudMesh.position.set(initialX, initialY, initialZ);
+
+  // Set random cloud properties
+  const scale = 0.8 + Math.random() * 0.6; // Scale between 0.8x and 1.4x
+  cloudMesh.scale.set(scale, scale, scale);
+
+  // Randomized gentle drift speeds (units per second)
+  cloudMesh.userData = {
+    driftSpeed: 0.15 + Math.random() * 0.25, // 0.15 to 0.40 units per second
+    baseY: initialY,
+    baseZ: initialZ
+  };
+
+  scene.add(cloudMesh);
+  clouds.push(cloudMesh);
+}
+
 // Check rules after any movement & lock state tracking
 let gameLoopLocked = false;
 let gameOverTimeout = null;
 
-// 5. Setup Interactive Glassmorphic UI HUD Updates
+// 5. Track Settings & Instructions Dialog state
+let settingsOpen = false;
+let instructionsOpen = false;
+
+// Setup Interactive Glassmorphic UI HUD Updates
 function updateUIOverlay() {
   const ruleResult = gameState.checkRules();
   const boatLoc = gameState.boatLocation.toUpperCase();
@@ -115,7 +153,7 @@ function updateUIOverlay() {
   const rightActors = [];
 
   Object.entries(gameState.actorPositions).forEach(([actor, pos]) => {
-    const displayName = actor === 'man' ? 'Shepherd' : actor === 'fox' ? 'Fox' : actor === 'sheep1' ? 'Sheep 1' : 'Sheep 2 (Lamb)';
+    const displayName = actor === 'man' ? 'Shepherd 👨‍🌾' : actor === 'fox' ? 'Fox 🦊' : actor === 'sheep1' ? 'Sheep 🐑' : 'Lamb 🐏';
     if (pos === 'left') leftActors.push(displayName);
     else if (pos === 'boat') boatActors.push(displayName);
     else if (pos === 'right') rightActors.push(displayName);
@@ -127,24 +165,38 @@ function updateUIOverlay() {
 
   const isShepherdOnBoat = gameState.actorPositions.man === 'boat';
 
-  // Let's create a beautiful rich layout
+  // Let's create a beautiful rich structured Right panel layout with popup modals for settings & instructions
   appContainer.innerHTML = `
-    <header class="glass-panel hud-header">
-      <div class="hud-header-content">
-        <h1 class="hud-title">ISOMETRIC RIVER PUZZLE 3D</h1>
-        <p class="hud-subtitle"><strong>Challenge:</strong> Help the shepherd transport the sheep and fox safely across the river.</p>
-        <div class="hud-rules-warning">
-          <strong>Rules:</strong> Boat capacity: 2. Shepherd must navigate. Left-alone combos like (Fox + Sheep) fail!
-        </div>
-      </div>
-    </header>
+    <!-- Top-Left Floating Title Header -->
+    <div class="top-left-floating-header">
+      <header class="glass-panel hud-card" style="padding: 12px 20px;">
+        <h1 class="hud-title">RIVER PUZZLE 3D</h1>
+        <p class="hud-subtitle">Elegant low-poly brainteaser</p>
+      </header>
+    </div>
 
-    <div class="glass-panel hud-status">
-      <div class="hud-status-content">
-        <h3 class="status-heading">CURRENT GAME STATE</h3>
+    <!-- Right Panel: Unified Stats, Game Controls, and Settings Card -->
+    <div class="right-hud-panel">
+      <div class="glass-panel hud-card">
+        <div class="card-header-row">
+          <h3 class="status-heading">🎮 GAME CONTROLS</h3>
+          <div style="display: flex; gap: 8px; align-items: center;">
+            <button class="settings-gear-btn" id="instructions-trigger-btn" title="View Mission & Rules">
+              ℹ️
+            </button>
+            <button class="settings-gear-btn" id="settings-trigger-btn" title="Open Settings Dialog">
+              ⚙️
+            </button>
+          </div>
+        </div>
+
         <p class="status-item"><strong>Boat Docked:</strong> ${boatLoc}-Bank</p>
-        <div class="status-item highlight-moves"><strong>Moves:</strong> <span class="moves-count">${gameState.moves}</span></div>
         <p class="status-item"><strong>On Boat:</strong> ${boatActors.join(', ') || '<em>Empty</em>'}</p>
+
+        <div class="status-item highlight-moves">
+          <strong>Moves:</strong>
+          <span class="moves-count">${gameState.moves}</span>
+        </div>
 
         <div class="action-buttons-container">
           <button class="move-boat-button glass-button ${isShepherdOnBoat ? '' : 'disabled'}" id="move-boat-btn" ${isShepherdOnBoat ? '' : 'disabled'}>
@@ -154,33 +206,87 @@ function updateUIOverlay() {
             🔄 RESET
           </button>
         </div>
+      </div>
 
-        <hr class="hud-divider" />
+      <div class="glass-panel hud-card">
+        <h3 class="status-heading" style="margin-bottom: 12px;">🏝️ BANK LAYOUT</h3>
         <div class="banks-info">
           <div class="bank-col">
-            <strong>L-Bank Assets:</strong>
+            <strong>Left Bank</strong>
             <ul>${leftActors.map(a => `<li>${a}</li>`).join('') || '<li><em>None</em></li>'}</ul>
           </div>
           <div class="bank-col">
-            <strong>R-Bank Assets:</strong>
+            <strong>Right Bank</strong>
             <ul>${rightActors.map(a => `<li>${a}</li>`).join('') || '<li><em>None</em></li>'}</ul>
           </div>
         </div>
       </div>
+
+      ${devPanelVisible ? `
+      <div class="glass-panel hud-card dev-controls-panel">
+        <h3 class="status-heading" style="margin-bottom: 10px; color: #ff8800;">🛠️ DEV CONTROLS</h3>
+        <p class="dev-instruction"><kbd>Spacebar</kbd> : Sail Kayak</p>
+        <p class="dev-instruction"><kbd>1</kbd> : Load/Unload Shepherd</p>
+        <p class="dev-instruction"><kbd>2</kbd> : Load/Unload Fox</p>
+        <p class="dev-instruction"><kbd>3</kbd> : Load/Unload Sheep</p>
+        <p class="dev-instruction"><kbd>4</kbd> : Load/Unload Lamb</p>
+        <div class="dev-note">Hotkeys are active while dev panel is toggled (D key).</div>
+      </div>
+      ` : ''}
     </div>
 
-    ${devPanelVisible ? `
-    <div class="glass-panel dev-controls-panel">
-      <h3 class="status-heading">DEV DEMO CONTROLS</h3>
-      <p class="dev-instruction"><kbd>Spacebar</kbd> : Sail Kayak</p>
-      <p class="dev-instruction"><kbd>1</kbd> : Load / Unload Shepherd</p>
-      <p class="dev-instruction"><kbd>2</kbd> : Load / Unload Fox</p>
-      <p class="dev-instruction"><kbd>3</kbd> : Load / Unload Sheep 1</p>
-      <p class="dev-instruction"><kbd>4</kbd> : Load / Unload Sheep 2 (Lamb)</p>
-      <div class="dev-note">Press keys to test robust animations & state validation.</div>
+    <!-- Settings Dialog Modal -->
+    ${settingsOpen ? `
+    <div class="modal-overlay" id="settings-modal-overlay">
+      <div class="glass-panel terminal-modal">
+        <h2 class="modal-title" style="color: #014f86; margin-bottom: 20px;">⚙️ GAME SETTINGS</h2>
+        <div class="settings-modal-content">
+          <div class="settings-row">
+            <span class="settings-label">
+              <span id="speaker-icon">${soundManager.enabled ? '🔊' : '🔇'}</span> Sound Effects
+            </span>
+            <label class="toggle-switch">
+              <input type="checkbox" id="sound-toggle-input" ${soundManager.enabled ? 'checked' : ''}>
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+        </div>
+        <button class="reset-button" id="settings-close-btn">Close Settings</button>
+      </div>
     </div>
     ` : ''}
 
+    <!-- Instructions Dialog Modal -->
+    ${instructionsOpen ? `
+    <div class="modal-overlay" id="instructions-modal-overlay">
+      <div class="glass-panel terminal-modal" style="width: 480px; text-align: left;">
+        <h2 class="modal-title" style="color: #014f86; margin-bottom: 15px; text-align: center;">📜 MISSION & RULES</h2>
+        <div class="instructions-card-content">
+          <p>Help the <strong>Shepherd</strong> safely transport the hungry <strong>Fox</strong> and the two fluffy <strong>Sheep (Sheep and Lamb)</strong> across the river to the Right Bank.</p>
+          <hr class="hud-divider" />
+          <p><strong>Safety Rules:</strong></p>
+          <ul class="rules-list">
+            <li>The Shepherd must navigate the boat.</li>
+            <li>The kayak can only hold <strong>at most 2 passengers</strong>.</li>
+            <li>If left alone on a bank without the shepherd:
+              <ul>
+                <li>The Fox will eat the Sheep.</li>
+                <li>The Fox will eat the Lamb.</li>
+              </ul>
+            </li>
+          </ul>
+          <div class="hud-rules-warning" style="margin-top: 15px;">
+            ⚠️ <strong>Warning:</strong> Left-alone combos like (Fox + Sheep) or (Fox + Lamb) trigger a GAME OVER!
+          </div>
+        </div>
+        <div style="text-align: center; margin-top: 25px;">
+          <button class="reset-button" id="instructions-close-btn">Close Instructions</button>
+        </div>
+      </div>
+    </div>
+    ` : ''}
+
+    <!-- Game Over / Victory Modals -->
     ${(ruleResult !== 'playing' && !gameLoopLocked) ? `
     <div class="modal-overlay">
       <div class="glass-panel terminal-modal ${ruleResult}">
@@ -197,7 +303,7 @@ function updateUIOverlay() {
 
     <footer class="glass-panel hud-footer">
       <div class="hud-footer-content">
-        Design Step 4 • Interactive Gameplay, Raycasting, & Game Flow
+        Visual & Spatial Polish Phase • Jules PR Reviewer v1.2.0
       </div>
     </footer>
   `;
@@ -206,6 +312,7 @@ function updateUIOverlay() {
   const resetBtn = document.getElementById('reset-game-btn');
   if (resetBtn) {
     resetBtn.addEventListener('click', () => {
+      soundManager.init();
       if (gameOverTimeout) {
         clearTimeout(gameOverTimeout);
         gameOverTimeout = null;
@@ -213,6 +320,7 @@ function updateUIOverlay() {
       gameLoopLocked = false;
       gameState.reset();
       triggerResetGlide();
+      soundManager.playToggleOn();
       updateUIOverlay();
     });
   }
@@ -221,6 +329,7 @@ function updateUIOverlay() {
   const hudResetBtn = document.getElementById('hud-reset-btn');
   if (hudResetBtn) {
     hudResetBtn.addEventListener('click', () => {
+      soundManager.init();
       if (gameOverTimeout) {
         clearTimeout(gameOverTimeout);
         gameOverTimeout = null;
@@ -228,6 +337,7 @@ function updateUIOverlay() {
       gameLoopLocked = false;
       gameState.reset();
       triggerResetGlide();
+      soundManager.playToggleOn();
       updateUIOverlay();
     });
   }
@@ -237,6 +347,56 @@ function updateUIOverlay() {
   if (moveBoatBtn && isShepherdOnBoat) {
     moveBoatBtn.addEventListener('click', () => {
       handleBoatMove();
+    });
+  }
+
+  // Attach Settings Toggle button listener
+  const settingsBtn = document.getElementById('settings-trigger-btn');
+  if (settingsBtn) {
+    settingsBtn.addEventListener('click', () => {
+      soundManager.init();
+      settingsOpen = true;
+      updateUIOverlay();
+    });
+  }
+
+  // Attach Settings Close button listener
+  const settingsCloseBtn = document.getElementById('settings-close-btn');
+  if (settingsCloseBtn) {
+    settingsCloseBtn.addEventListener('click', () => {
+      settingsOpen = false;
+      updateUIOverlay();
+    });
+  }
+
+  // Attach Instructions Toggle button listener
+  const instructionsBtn = document.getElementById('instructions-trigger-btn');
+  if (instructionsBtn) {
+    instructionsBtn.addEventListener('click', () => {
+      soundManager.init();
+      instructionsOpen = true;
+      updateUIOverlay();
+    });
+  }
+
+  // Attach Instructions Close button listener
+  const instructionsCloseBtn = document.getElementById('instructions-close-btn');
+  if (instructionsCloseBtn) {
+    instructionsCloseBtn.addEventListener('click', () => {
+      instructionsOpen = false;
+      updateUIOverlay();
+    });
+  }
+
+  // Attach Settings Toggle switch listener
+  const soundToggle = document.getElementById('sound-toggle-input');
+  if (soundToggle) {
+    soundToggle.addEventListener('change', () => {
+      soundManager.toggleSound();
+      const speaker = document.getElementById('speaker-icon');
+      if (speaker) {
+        speaker.textContent = soundManager.enabled ? '🔊' : '🔇';
+      }
     });
   }
 }
@@ -284,6 +444,7 @@ window.addEventListener('mousemove', (e) => {
 
 // Click/Touch Tap Handler
 function handleInteraction(clientX, clientY) {
+  soundManager.init(); // Initialize sound on interaction safely
   if (gameState.checkRules() !== 'playing') return;
 
   const rect = renderer.domElement.getBoundingClientRect();
@@ -322,6 +483,20 @@ window.addEventListener('touchend', (e) => {
   }
 }, { passive: false });
 
+// 5c. Mouse Wheel Zoom for Orthographic Camera
+window.addEventListener('wheel', (e) => {
+  // Prevent default scroll behavior inside canvas
+  if (e.target && typeof e.target.closest === 'function' && (e.target.closest('#canvas-container') || e.target.tagName === 'CANVAS')) {
+    e.preventDefault();
+  }
+
+  // Adjust camera.zoom based on event.deltaY
+  camera.zoom -= e.deltaY * 0.001;
+  // Clamp camera.zoom between 0.6x and 1.8x
+  camera.zoom = Math.max(0.6, Math.min(1.8, camera.zoom));
+  camera.updateProjectionMatrix();
+}, { passive: false });
+
 // Actor click logic (State Machine binding)
 function handleActorClick(actorId) {
   const currentPos = gameState.actorPositions[actorId];
@@ -334,26 +509,36 @@ function handleActorClick(actorId) {
   }
 
   if (success) {
+    // Play distinctive character click and load/unload sound
+    if (actorId === 'sheep1' || actorId === 'sheep2') {
+      soundManager.playSheepBaa();
+    } else if (actorId === 'fox') {
+      soundManager.playFoxRustle();
+    } else if (actorId === 'man') {
+      soundManager.playShepherdThud();
+    } else {
+      soundManager.playHop();
+    }
     // Refresh UI Overlay and check rules
     updateUIOverlay();
     checkGameLoopRules();
   } else {
-    // Subtle visual rotational wobble/shake feedback
+    // Subtle visual rotational wobble/shake feedback and sound buzz
     triggerShake(actorId);
+    soundManager.playBuzzer();
   }
 }
 
 // Boat move logic (State Machine binding)
 function handleBoatMove() {
   if (gameState.moveBoat()) {
+    soundManager.playSplash(); // Play water sloshing with paddle wood creaking
     updateUIOverlay();
     checkGameLoopRules();
   } else {
     // If Shepherd is not on board, shake the kayak
     triggerShake('man'); // Shake shepherd to show they are required, or shake the boat?
-    // Since shepherd is required, let's also trigger shake on the boat mesh itself if needed, or shake 'man'.
-    // Shaking the boat mesh itself can also be done. Let's add 'boat' to triggerShake support!
-    // But shaking 'man' (or both) is extremely helpful feedback. Let's trigger shake on 'man' if not on boat.
+    soundManager.playBuzzer();
   }
 }
 
@@ -363,9 +548,11 @@ function checkGameLoopRules() {
   if (result === 'playing') return;
 
   if (result === 'victory') {
+    soundManager.playVictory(); // Play triumphant arpeggio scale
     // Instant display of victory modal as there is no sad loss event
     updateUIOverlay();
   } else if (result === 'game_over_fox_ate_sheep') {
+    soundManager.playGameOver(); // Play comic sliding cartoon crash fail
     gameLoopLocked = true;
 
     // Find which sheep was left alone with the fox on the same bank (without shepherd)
@@ -416,10 +603,26 @@ function animate() {
   // 1. Water waves vertex shader displacement
   animateWater(waterMesh, elapsedTime);
 
-  // 2. Update boat/actors smooth transitions and bobbing
+  // 2. Gentle floating cloud X-axis drift and wrap-around
+  const wrapLeft = -12.0;
+  const wrapRight = 12.0;
+  clouds.forEach(cloud => {
+    cloud.position.x += cloud.userData.driftSpeed * delta;
+    // When a cloud drifts out of bounds (past wrapRight), wrap it back to wrapLeft
+    if (cloud.position.x > wrapRight) {
+      cloud.position.x = wrapLeft;
+      // Slightly randomize its Y and Z again on wrap-around for endless variety
+      cloud.userData.baseY = 5.5 + Math.random() * 2.3;
+      cloud.position.z = -3.5 - Math.random() * 4.0;
+    }
+    // Subtle additional bobbing along the Y axis (stable and frame-rate independent)
+    cloud.position.y = cloud.userData.baseY + Math.sin(elapsedTime * 0.8 + cloud.position.x) * 0.1;
+  });
+
+  // 3. Update boat/actors smooth transitions and bobbing
   updateAnimations(delta, elapsedTime, boatMesh, actorMeshes, gameState);
 
-  // 3. Render frame
+  // 4. Render frame
   renderer.render(scene, camera);
 }
 
