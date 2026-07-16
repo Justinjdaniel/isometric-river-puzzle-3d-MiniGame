@@ -13,3 +13,41 @@
 #     steps:
 #       - name: Run Reviewer
 #         uses: thalesraymond/jules-pr-reviewer@v1.2.0
+name: Jules PR Review
+
+on:
+  pull_request:
+    # Trigger ONLY when the PR is first created or marked ready
+    types: [opened, ready_for_review]
+
+# Cancel any accidental concurrent runs
+concurrency:
+  group: jules-review-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    # Skip running if the PR was created by a bot, or if it is a Jules-generated branch
+    if: |
+      github.actor != 'github-actions[bot]' &&
+      github.actor != 'jules-platform[bot]' &&
+      !startsWith(github.head_ref, 'jules/') &&
+      !startsWith(github.head_ref, 'jules-')
+    permissions:
+      pull-requests: write
+      contents: read
+      statuses: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Run Advanced Jules PR Reviewer
+        uses: thalesraymond/jules-pr-reviewer@v1.2.0
+        with:
+          jules_api_key: ${{ secrets.JULES_API_KEY }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          rules_file: ".github/jules-review-rules.md"
+          extra_instructions: |
+            Make absolutely sure to append the "👉 What to Do Next in GitHub" guide to the end of your main review comment summary, and strictly enforce the visual output/inspection status check.
