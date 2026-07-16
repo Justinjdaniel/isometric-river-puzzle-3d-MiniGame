@@ -2,10 +2,10 @@ import * as THREE from 'three';
 import { COLORS, BOUNDS } from '../core/constants.js';
 
 export function setupScene(container) {
-  // 1. Create Scene
+  // 1. Create Scene with pastel sky-blue color and subtle atmospheric fog
   const scene = new THREE.Scene();
-  // Deep, elegant cinematic background color
-  scene.background = new THREE.Color(COLORS.SHADOW);
+  scene.background = new THREE.Color(COLORS.SKY_AMBIENT);
+  scene.fog = new THREE.FogExp2(COLORS.SKY_AMBIENT, 0.015);
 
   // 2. Camera Setup (Orthographic Camera for Isometric Projection)
   const aspect = window.innerWidth / (window.innerHeight || 1);
@@ -125,19 +125,29 @@ export function setupScene(container) {
   // Add some stylized low-poly rocks inside the riverbed and along the banks
   addStylizedRocks(scene, earthMaterial);
 
-  // 7. Water Plane (Faceted for low-poly wave updates)
-  const waterGeom = new THREE.PlaneGeometry(riverW, chunkD, 8, 16);
+  // Add shore pebbles and gravel at the water's edge
+  addShorePebbles(scene);
+
+  // Add grass tufts on the land top
+  addGrassTufts(scene);
+
+  // Add rich mud strata and rocky layers to the vertical cutout faces
+  addEarthStrata(scene);
+
+  // 7. Water 3D Box Volume (semi-transparent, with top-face deforming vertex waves)
+  // Replacing 2D plane with 3D box to fill the side-cutout cross-sections with water beautifully!
+  const waterGeom = new THREE.BoxGeometry(riverW, 1.4, chunkD, 8, 1, 16);
   const waterMaterial = new THREE.MeshStandardMaterial({
     color: COLORS.WATER,
     flatShading: true,
     roughness: 0.12,
-    metalness: 0.3, // Lowered metalness slightly so it reflects bright diffuse light and looks clean, vibrant turquoise
+    metalness: 0.3,
     transparent: true,
-    opacity: 0.85
+    opacity: 0.82
   });
   const waterMesh = new THREE.Mesh(waterGeom, waterMaterial);
-  waterMesh.rotation.x = -Math.PI / 2;
-  waterMesh.position.set(0, BOUNDS.WATER_Y, 0); // Y = -0.1
+  // Position so top face is exactly at BOUNDS.WATER_Y (-0.1). Since height is 1.4, center Y is -0.1 - 0.7 = -0.8
+  waterMesh.position.set(0, BOUNDS.WATER_Y - 0.7, 0);
   waterMesh.receiveShadow = true;
   scene.add(waterMesh);
 
@@ -147,8 +157,9 @@ export function setupScene(container) {
   scene.add(leftDock);
   scene.add(rightDock);
 
-  // 9. Background Mountains Setup
+  // 9. Background Mountains Setup with smooth sloped foothills transition
   createBackgroundMountains(scene);
+  addMountainFoothills(scene);
 
   // 10. Resize Handler Configuration
   const onResize = () => {
@@ -349,5 +360,240 @@ function createBackgroundMountains(scene) {
 
     group.position.set(m.x, m.y, m.z);
     scene.add(group);
+  });
+}
+
+/**
+ * Adds shore pebbles and tiny rocks along the water's edge
+ */
+function addShorePebbles(scene) {
+  const pebbleMaterial = new THREE.MeshStandardMaterial({
+    color: 0x8a8a8a,
+    flatShading: true,
+    roughness: 0.9
+  });
+  const smallPebbleMaterial = new THREE.MeshStandardMaterial({
+    color: 0x6e6e6e,
+    flatShading: true,
+    roughness: 0.9
+  });
+
+  const pebbles = [
+    // Left Bank shore edge (X close to -2.5)
+    { x: -2.55, y: -0.05, z: -4.5, s: 0.22, m: pebbleMaterial },
+    { x: -2.6,  y: -0.08, z: -3.0, s: 0.16, m: smallPebbleMaterial },
+    { x: -2.52, y: -0.03, z: -1.2, s: 0.28, m: pebbleMaterial },
+    { x: -2.65, y: -0.06, z:  1.0, s: 0.18, m: smallPebbleMaterial },
+    { x: -2.58, y: -0.04, z:  2.8, s: 0.24, m: pebbleMaterial },
+    { x: -2.5,  y: -0.08, z:  5.0, s: 0.15, m: smallPebbleMaterial },
+
+    // Right Bank shore edge (X close to 2.5)
+    { x: 2.55,  y: -0.05, z: -4.8, s: 0.25, m: pebbleMaterial },
+    { x: 2.65,  y: -0.06, z: -3.2, s: 0.17, m: smallPebbleMaterial },
+    { x: 2.5,   y: -0.04, z: -1.0, s: 0.26, m: pebbleMaterial },
+    { x: 2.58,  y: -0.07, z:  0.8, s: 0.14, m: smallPebbleMaterial },
+    { x: 2.6,   y: -0.03, z:  2.2, s: 0.22, m: pebbleMaterial },
+    { x: 2.52,  y: -0.08, z:  4.2, s: 0.19, m: smallPebbleMaterial }
+  ];
+
+  pebbles.forEach((p, idx) => {
+    const geom = new THREE.DodecahedronGeometry(p.s, 0);
+    const mesh = new THREE.Mesh(geom, p.m);
+    mesh.position.set(p.x, p.y, p.z);
+    mesh.rotation.set(
+      Math.sin(idx) * 0.5,
+      Math.cos(idx) * 2.0,
+      Math.sin(idx * 2) * 0.3
+    );
+    mesh.castShadow = true;
+    mesh.receiveShadow = true;
+    scene.add(mesh);
+  });
+}
+
+/**
+ * Procedurally scatters realistic, low-poly grass/clover tufts on top of both banks
+ */
+function addGrassTufts(scene) {
+  const grassMaterial = new THREE.MeshStandardMaterial({
+    color: 0x7cfc00, // Slightly brighter, fresh grass green for outstanding contrast
+    flatShading: true,
+    roughness: 0.8
+  });
+
+  // Low-poly 3-blade grass geometry
+  const bladeGeom = new THREE.BoxGeometry(0.04, 0.22, 0.04);
+
+  const scatterTuft = (x, z) => {
+    const tuft = new THREE.Group();
+    tuft.position.set(x, 0.1, z); // sit slightly above grass top
+
+    // 3 blades pointing in different angled directions
+    const b1 = new THREE.Mesh(bladeGeom, grassMaterial);
+    b1.rotation.set(0.2, 0.1, 0.25);
+    b1.position.set(-0.03, 0.08, 0);
+    tuft.add(b1);
+
+    const b2 = new THREE.Mesh(bladeGeom, grassMaterial);
+    b2.rotation.set(-0.25, -0.15, -0.2);
+    b2.position.set(0.03, 0.08, 0.02);
+    tuft.add(b2);
+
+    const b3 = new THREE.Mesh(bladeGeom, grassMaterial);
+    b3.rotation.set(0.05, 0.3, -0.3);
+    b3.position.set(0, 0.08, -0.03);
+    tuft.add(b3);
+
+    // Randomize tuft size and rotation
+    const scale = 0.75 + Math.random() * 0.5;
+    tuft.scale.set(scale, scale, scale);
+    tuft.rotation.y = Math.random() * Math.PI;
+
+    scene.add(tuft);
+  };
+
+  // Seeded coordinates for a beautifully distributed natural layout (rather than pure wild random)
+  const coords = [
+    // Left Bank
+    { x: -3.8, z: -3.0 }, { x: -4.5, z: -4.5 }, { x: -6.0, z: -3.2 }, { x: -6.8, z: -4.5 },
+    { x: -3.5, z: -1.2 }, { x: -4.2, z: -2.0 }, { x: -5.0, z: -0.5 }, { x: -7.2, z: -2.2 },
+    { x: -3.2, z:  1.5 }, { x: -4.8, z:  2.8 }, { x: -6.5, z:  1.2 }, { x: -7.0, z:  2.5 },
+    { x: -3.6, z:  4.2 }, { x: -4.4, z:  4.8 }, { x: -5.8, z:  3.6 }, { x: -7.4, z:  4.6 },
+    { x: -5.2, z: -1.8 }, { x: -5.4, z:  2.0 }, { x: -6.1, z: -1.0 }, { x: -6.3, z:  0.2 },
+
+    // Right Bank
+    { x:  3.8, z: -3.0 }, { x:  4.5, z: -4.5 }, { x:  6.0, z: -3.2 }, { x:  6.8, z: -4.5 },
+    { x:  3.5, z: -1.2 }, { x:  4.2, z: -2.0 }, { x:  5.0, z: -0.5 }, { x:  7.2, z: -2.2 },
+    { x:  3.2, z:  1.5 }, { x:  4.8, z:  2.8 }, { x:  6.5, z:  1.2 }, { x:  7.0, z:  2.5 },
+    { x:  3.6, z:  4.2 }, { x:  4.4, z:  4.8 }, { x:  5.8, z:  3.6 }, { x:  7.4, z:  4.6 },
+    { x:  5.2, z: -1.8 }, { x:  5.4, z:  2.0 }, { x:  6.1, z: -1.0 }, { x:  6.3, z:  0.2 }
+  ];
+
+  coords.forEach(c => scatterTuft(c.x, c.z));
+}
+
+/**
+ * Creates highly detailed layered mud/rocky strata and protruding block clods
+ * on the visible vertical sides of the floating island diorama
+ */
+function addEarthStrata(scene) {
+  const strataMaterial = new THREE.MeshStandardMaterial({
+    color: 0x58391b, // Darker clay/rock color
+    flatShading: true,
+    roughness: 0.95
+  });
+  const coalMaterial = new THREE.MeshStandardMaterial({
+    color: 0x422c18, // Even darker shade for strata variety
+    flatShading: true,
+    roughness: 0.95
+  });
+
+  const strataBands = [
+    // 1. Front cutouts (at Z = 6.01, spanning along X)
+    // Left front bank: X from -8 to -2.5 (centered at -5.25), Y = -1.2, height = 0.15
+    { x: -5.25, y: -1.2, z: 6.01, w: 5.5, h: 0.15, d: 0.06, m: strataMaterial },
+    { x: -5.25, y: -2.2, z: 6.01, w: 5.5, h: 0.18, d: 0.06, m: coalMaterial },
+    // Right front bank: X from 2.5 to 8 (centered at 5.25)
+    { x: 5.25,  y: -1.2, z: 6.01, w: 5.5, h: 0.15, d: 0.06, m: strataMaterial },
+    { x: 5.25,  y: -2.2, z: 6.01, w: 5.5, h: 0.18, d: 0.06, m: coalMaterial },
+    // Riverbed front cutout: X from -2.5 to 2.5 (centered at 0), Y = -2.6, height = 0.12
+    { x: 0.0,   y: -2.6, z: 6.01, w: 5.0, h: 0.12, d: 0.06, m: coalMaterial },
+
+    // 2. Far Left cutout face (at X = -8.01, spanning along Z)
+    { x: -8.01, y: -1.5, z: 0.0, w: 0.06, h: 0.22, d: 12.0, m: strataMaterial },
+    { x: -8.01, y: -2.5, z: 2.0, w: 0.06, h: 0.15, d: 8.0,  m: coalMaterial },
+
+    // 3. Far Right cutout face (at X = 8.01, spanning along Z)
+    { x: 8.01,  y: -1.5, z: 0.0, w: 0.06, h: 0.22, d: 12.0, m: strataMaterial },
+    { x: 8.01,  y: -2.5, z: -2.0, w: 0.06, h: 0.15, d: 8.0,  m: coalMaterial }
+  ];
+
+  strataBands.forEach(band => {
+    const geom = new THREE.BoxGeometry(band.w, band.h, band.d);
+    const mesh = new THREE.Mesh(geom, band.m);
+    mesh.position.set(band.x, band.y, band.z);
+    mesh.castShadow = true;
+    mesh.receiveShadow = true;
+    scene.add(mesh);
+  });
+
+  // 4. Protruding blocky mud/earth clods and jagged rocks sticking out of vertical faces
+  const clods = [
+    // Front face clods
+    { x: -6.5, y: -1.6, z: 6.04, sx: 0.25, sy: 0.2, sz: 0.12 },
+    { x: -3.8, y: -0.8, z: 6.04, sx: 0.3,  sy: 0.3, sz: 0.1 },
+    { x: -4.8, y: -2.4, z: 6.04, sx: 0.2,  sy: 0.2, sz: 0.14 },
+    { x:  3.5, y: -1.8, z: 6.04, sx: 0.28, sy: 0.22, sz: 0.12 },
+    { x:  6.2, y: -0.9, z: 6.04, sx: 0.32, sy: 0.28, sz: 0.1 },
+    { x:  4.5, y: -2.3, z: 6.04, sx: 0.18, sy: 0.18, sz: 0.15 },
+
+    // Far Left face clods
+    { x: -8.04, y: -1.0, z: -3.2, sx: 0.12, sy: 0.24, sz: 0.3 },
+    { x: -8.04, y: -2.1, z:  1.5, sx: 0.15, sy: 0.18, sz: 0.25 },
+    { x: -8.04, y: -0.6, z:  4.2, sx: 0.1,  sy: 0.3,  sz: 0.2 },
+
+    // Far Right face clods
+    { x:  8.04, y: -1.1, z: -2.5, sx: 0.12, sy: 0.25, sz: 0.32 },
+    { x:  8.04, y: -2.3, z:  3.0, sx: 0.15, sy: 0.2,  sz: 0.22 },
+    { x:  8.04, y: -0.7, z: -4.8, sx: 0.1,  sy: 0.28, sz: 0.2 }
+  ];
+
+  clods.forEach(c => {
+    const geom = new THREE.BoxGeometry(1, 1, 1);
+    const mesh = new THREE.Mesh(geom, strataMaterial);
+    mesh.position.set(c.x, c.y, c.z);
+    mesh.scale.set(c.sx, c.sy, c.sz);
+    mesh.castShadow = true;
+    mesh.receiveShadow = true;
+    scene.add(mesh);
+  });
+}
+
+/**
+ * Creates sloping low-poly foothills and green terraced wedges at the mountain bases
+ * to transition them smoothly into the meadow valley floor.
+ */
+function addMountainFoothills(scene) {
+  const hillMaterial = new THREE.MeshStandardMaterial({
+    color: COLORS.BANK_LAND, // matches the bright meadow green for a smooth visual blending
+    flatShading: true,
+    roughness: 0.8
+  });
+
+  const mudSideMaterial = new THREE.MeshStandardMaterial({
+    color: COLORS.EARTH_DARK,
+    flatShading: true,
+    roughness: 0.9
+  });
+
+  const hillMaterials = [
+    mudSideMaterial,      // +X
+    mudSideMaterial,      // -X
+    hillMaterial,         // +Y (Top is green grass)
+    mudSideMaterial,      // -Y
+    mudSideMaterial,      // +Z
+    mudSideMaterial       // -Z
+  ];
+
+  // Sloping foothills structured as flat-topped tiered boxes
+  const hills = [
+    // Left Bank foothills (X negative, Z around -5.0)
+    { x: -6.5, y: -0.4, z: -5.2, w: 2.8, h: 0.8, d: 2.5 },
+    { x: -4.2, y: -0.5, z: -5.4, w: 2.2, h: 0.6, d: 2.0 },
+    // Right Bank foothills (X positive, Z around -5.0)
+    { x:  6.5, y: -0.4, z: -5.2, w: 2.8, h: 0.8, d: 2.5 },
+    { x:  4.2, y: -0.5, z: -5.4, w: 2.2, h: 0.6, d: 2.0 },
+    // Center background slope
+    { x:  0.0, y: -1.0, z: -5.8, w: 4.8, h: 0.5, d: 1.8 }
+  ];
+
+  hills.forEach(h => {
+    const geom = new THREE.BoxGeometry(h.w, h.h, h.d);
+    const mesh = new THREE.Mesh(geom, hillMaterials);
+    mesh.position.set(h.x, h.y, h.z);
+    mesh.rotation.x = -0.06; // subtle slope downwards towards the riverbed/front
+    mesh.castShadow = true;
+    mesh.receiveShadow = true;
+    scene.add(mesh);
   });
 }

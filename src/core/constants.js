@@ -8,13 +8,18 @@ export const COLORS = {
   EARTH_DARK: 0x8B5A2B,     // Lighter, warm-toned earthy block sides
   DOCK_WOOD: 0xA0522D,      // Rich wooden docks
   BOAT: 0xFF7700,           // Vibrant stylized orange kayak/canoe
-  MAN: 0x1e6fba,            // Lighter bright shepherd robes/hat
+  MAN: 0x1e6fba,            // Deep blue coat/robes
   FOX: 0xFF5500,            // Bright orange/red fox
   SHEEP: 0xFFFFFF,          // Fluffy white sheep wool
   SKY_AMBIENT: 0xE0F7FA,    // Bright sky ambient (light turquoise/cyan tint)
   SUNLIGHT: 0xFFFCEB,       // Bright, warm sunlight
   MOUNTAIN: 0x6E8B3D,       // Sunny green/grey mountain peaks
-  SHADOW: 0xE0F7FA          // Set background/backdrop to match bright sky ambient tint
+  SHADOW: 0xE0F7FA,         // Set background/backdrop to match bright sky ambient tint
+
+  // Three distinct shades of forest green for natural organic conifer trees
+  PINE_LIGHT: 0x5e8c31,     // Light pine green
+  PINE_CLASSIC: 0x3b6a36,   // Classic pine green
+  PINE_DEEP: 0x224d17       // Deep forest green
 };
 
 export const SPEED = {

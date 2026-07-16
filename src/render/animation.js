@@ -12,8 +12,8 @@ const actorAnims = {
 
 /**
  * CPU-based water plane vertex wave displacement.
- * Modifies the position attribute of a PlaneGeometry to create chunky, low-poly waves.
- * @param {THREE.Mesh} waterMesh - The water plane mesh
+ * Deforms only the top face of the 3D Water BoxGeometry to maintain solid straight vertical cross-sections on the floating island.
+ * @param {THREE.Mesh} waterMesh - The 3D water box mesh
  * @param {number} elapsedTime - The elapsed clock time
  */
 export function animateWater(waterMesh, elapsedTime) {
@@ -23,18 +23,23 @@ export function animateWater(waterMesh, elapsedTime) {
   const posAttr = geom.attributes.position;
   const count = posAttr.count;
 
+  const flowSpeed = 1.5; // Downstream velocity along Z-axis (longitudinal)
+
   for (let i = 0; i < count; i++) {
-    // PlaneGeometry coordinates are relative: X and Y map to width and height
     const x = posAttr.getX(i);
     const y = posAttr.getY(i);
+    const z = posAttr.getZ(i);
 
-    // Apply combined low-poly waves using multiple sine/cosine frequencies
-    // Amplitude is kept subtle to keep it looking stylized and elegant
-    const wave = Math.sin(x * 1.3 + elapsedTime * 1.5) * 0.08 +
-                 Math.cos(y * 0.8 + elapsedTime * 1.2) * 0.06;
+    // In 3D BoxGeometry, the height is along local Y (1.4 units tall).
+    // The top face vertices reside at local Y = +0.7.
+    if (y > 0.6) {
+      const baseLocalY = 0.7;
+      // Waves flow downstream along the Z-axis by translating coordinates over time.
+      const wave = Math.sin(x * 1.2 + (z - elapsedTime * flowSpeed) * 0.8) * 0.07 +
+                   Math.cos((z - elapsedTime * flowSpeed * 1.4) * 1.2) * 0.04;
 
-    // In PlaneGeometry, Z is perpendicular to the plane (the wave height)
-    posAttr.setZ(i, wave);
+      posAttr.setY(i, baseLocalY + wave);
+    }
   }
 
   posAttr.needsUpdate = true;
@@ -116,6 +121,11 @@ export function updateAnimations(delta, elapsedTime, boatMesh, actorMeshes, game
       targetRotY = (currentLocation === 'left' ? 0 : Math.PI) + rotationOffset;
     }
 
+    // Lazily capture the original base scale of the actor mesh to avoid overwriting visual differences
+    const baseScaleX = mesh.userData.baseScaleX || (mesh.userData.baseScaleX = mesh.scale.x);
+    const baseScaleY = mesh.userData.baseScaleY || (mesh.userData.baseScaleY = mesh.scale.y);
+    const baseScaleZ = mesh.userData.baseScaleZ || (mesh.userData.baseScaleZ = mesh.scale.z);
+
     if (animState.animating) {
       // Progress the hop animation
       animState.progress += delta * SPEED.ANIMATION;
@@ -131,16 +141,37 @@ export function updateAnimations(delta, elapsedTime, boatMesh, actorMeshes, game
 
       mesh.position.set(currentX, arcY, currentZ);
 
+      // Squash and stretch scale deformation:
+      // - Stretch in mid-air (t < 0.82): Y expands, X/Z contract
+      // - Squash on impact landing (t >= 0.82): Y contracts, X/Z expand
+      let scaleYMult = 1.0;
+      if (t < 0.82) {
+        const midAirT = t / 0.82;
+        scaleYMult = 1.0 + Math.sin(midAirT * Math.PI) * 0.16; // Up to 1.16x stretching
+      } else {
+        const landingT = (t - 0.82) / 0.18;
+        scaleYMult = 1.0 - Math.sin(landingT * Math.PI) * 0.16; // Down to 0.84x squashing
+      }
+      const scaleXZMult = 2.0 - scaleYMult; // Inversely scale to preserve volume
+
+      mesh.scale.set(
+        baseScaleX * scaleXZMult,
+        baseScaleY * scaleYMult,
+        baseScaleZ * scaleXZMult
+      );
+
       // Smoothly interpolate to target rotation and add a playful spin in the middle
       mesh.rotation.y = THREE.MathUtils.lerp(animState.startRotY || 0, targetRotY, t) + Math.sin(t * Math.PI) * Math.PI * 2;
 
       if (t >= 1.0) {
         animState.animating = false;
+        mesh.scale.set(baseScaleX, baseScaleY, baseScaleZ);
       }
     } else {
-      // No active animation, lock position to exact targets
+      // No active animation, lock position and scale to exact targets
       mesh.position.set(targetX, targetY, targetZ);
       mesh.rotation.y = targetRotY;
+      mesh.scale.set(baseScaleX, baseScaleY, baseScaleZ);
     }
   });
 }

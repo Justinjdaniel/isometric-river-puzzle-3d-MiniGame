@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { setupScene } from './render/scene.js';
-import { createTree, createKayak, createShepherd, createFox, createSheep } from './render/assets.js';
+import { createTree, createKayak, createShepherd, createFox, createSheep, createShrub } from './render/assets.js';
 import { animateWater, updateAnimations, setupKeyboardControls, resetAnimations } from './render/animation.js';
 import { GameState } from './core/state.js';
 import { DEVELOPER_MODE } from './core/constants.js';
@@ -40,6 +40,10 @@ const treeCoordinates = [
   { x: -5.8, z: 4.5, s: 0.85 },
   { x: -7.2, z: 4.0, s: 1.3 },
   { x: -4.4, z: 4.8, s: 0.9 },
+  // Additional dense forest left bank trees
+  { x: -3.5, z: -4.8, s: 0.7 },
+  { x: -3.2, z: 4.5, s: 0.8 },
+  { x: -6.2, z: -2.8, s: 1.0 },
 
   // Right Bank (X positive, Z negative & positive)
   { x: 5.5, z: -4.2, s: 1.15 },
@@ -51,13 +55,44 @@ const treeCoordinates = [
   { x: 6.5, z: 3.2, s: 0.8 },
   { x: 5.8, z: 4.5, s: 1.2 },
   { x: 7.2, z: 4.0, s: 0.95 },
-  { x: 4.4, z: 4.8, s: 1.05 }
+  { x: 4.4, z: 4.8, s: 1.05 },
+  // Additional dense forest right bank trees
+  { x: 3.5, z: -4.8, s: 0.7 },
+  { x: 3.2, z: 4.5, s: 0.8 },
+  { x: 6.2, z: -2.8, s: 1.0 }
 ];
 
-treeCoordinates.forEach(tc => {
-  const tree = createTree(tc.s);
+treeCoordinates.forEach((tc, index) => {
+  const tree = createTree(tc.s, index);
   tree.position.set(tc.x, 0, tc.z);
   scene.add(tree);
+});
+
+// 4b. Scatter Cute Low-Poly Shrubs/Bushes Across Both Banks
+const shrubCoordinates = [
+  // Left Bank
+  { x: -4.0, z: -2.2, s: 0.95 },
+  { x: -3.4, z:  2.5, s: 1.1 },
+  { x: -4.8, z:  0.8, s: 0.75 },
+  { x: -5.2, z: -3.0, s: 1.0 },
+  { x: -6.3, z: -1.8, s: 0.8 },
+  { x: -6.0, z:  3.0, s: 0.95 },
+  { x: -4.1, z: -1.0, s: 0.85 },
+
+  // Right Bank
+  { x:  4.0, z: -2.2, s: 0.95 },
+  { x:  3.4, z:  2.5, s: 1.1 },
+  { x:  4.8, z:  0.8, s: 0.75 },
+  { x:  5.2, z: -3.0, s: 1.0 },
+  { x:  6.3, z: -1.8, s: 0.8 },
+  { x:  6.0, z:  3.0, s: 0.95 },
+  { x:  4.1, z: -1.0, s: 0.85 }
+];
+
+shrubCoordinates.forEach((sc, index) => {
+  const shrub = createShrub(sc.s, index);
+  shrub.position.set(sc.x, 0, sc.z);
+  scene.add(shrub);
 });
 
 // 5. Setup Interactive Glassmorphic UI HUD Updates

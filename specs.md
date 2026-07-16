@@ -63,12 +63,20 @@ The puzzle follows the classic river crossing riddle (Shepherd/Man, Two Sheep, a
   - River animated with slight wave vertex displacements or simple vertex shader offsets.
 - **Vibrant Sunlit Lighting Model**:
   - Shifted from a dim, moody aesthetic to a bright, vibrant, sunlit daytime scene.
-  - **Sky/Background**: Deep, dark backdrop replaced with a bright, clean, sunny backdrop or a vivid shadow fill matching daylight.
-  - **Water**: Clear turquoise hue (`#33EEFF` or `#00CCCC`) with a stylized, glassy reflection.
+  - **Sky/Background**: Set to a soft pastel sky-blue (`#E0F7FA`), making the diorama look like it's drifting in a breeze.
+  - **Fog**: Subtle atmospheric exp2 fog (`THREE.FogExp2` with `#E0F7FA`, density `0.015`) to blend distant mountains.
+  - **Water**: Clear turquoise hue (`#33EEFF` or `#00CCCC`) with a stylized, glassy reflection. Waves flow downstream (longitudinally along the Z-axis) over time.
   - **Grass**: Vibrant, rich, sunlit grass green (`#55CC55`).
   - **Rock Cutout**: Lighter, warm-toned rocky brown/earth texture.
   - **AmbientLight**: Globally lightened shadows using a strong AmbientLight (intensity `0.85+` with light-blue sky color).
   - **DirectionalLight**: A high-intensity main sunlight (intensity `1.6+` using warm color `#FFFCEB`) casting sharp, well-defined shadows that create depth across the low-poly terrain block.
+- **Detailed Asset Polish**:
+  - **Shepherd**: Deep blue coat, dark grey/black brimmed hat with brown leather band, holding a simple brown cylinder walking staff.
+  - **Sheep & Lamb**: Soft floppy blocky ears, black-and-white spherical beady eyes on a dark face.
+  - **Fox**: Black paws/socks on lower legs, white chest, white tail tip.
+  - **Conifer Trees**: Symmetrical three-tiered design with random scales (0.8x to 1.3x) and 3 distinct pine green tones (`light pine`, `classic pine`, `deep forest`).
+- **Boarding Hops (Squash & Stretch)**:
+  - Playful parabolic jump animations scale dynamically: stretching vertically (Y-scale up to 1.16x) in flight, and squashing on landing (Y-scale down to 0.84x) before returning to base size, while conserving volume on X/Z axes.
 - **Glassmorphic UI**:
   - Overlaid HUD, menus, and win/fail modals.
   - Transparent frosted glass aesthetic (`backdrop-filter: blur(10px); background: rgba(255, 255, 255, 0.15)`).
