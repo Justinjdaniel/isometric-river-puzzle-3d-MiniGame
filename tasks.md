@@ -103,3 +103,27 @@ This file tracks the completion progress of the **Isometric River Crossing Puzzl
   - **Description**: Redesign the rendering to transition from moody dim 'dark mode' to a bright, vibrant, sunlit day aesthetic (turquoise water `#33EEFF`, sunlit grass `#55CC55`, and high-intensity warm sunlight). Rotate the kayak 90 degrees to align parallel to the docks (bow facing along the river bank) and adjust boarding/unload target offsets to match beautifully.
   - **Assignee**: Sub-Agent
   - **Status**: `[Done]` (Verified by Jules)
+
+---
+
+## 5. Interactive Gameplay, Raycasting, and Game Flow
+
+- [ ] **Task 17: Update Technical Specifications & Interaction Rules**
+  - **Description**: Refine `specs.md` with mouse-click raycasting details, hover effect pointers, rotational wobble shake animations, game over custom cues, and the permanent glassmorphic "Move Boat" button.
+  - **Assignee**: Sub-Agent
+  - **Status**: `[In Progress]`
+
+- [ ] **Task 18: Mouse/Touch Raycasting and Hover Pointer**
+  - **Description**: Setup standard Raycaster in `src/main.js`. Enable cursor-style pointer updates when hovering over interactive actors/kayak meshes.
+  - **Assignee**: Sub-Agent
+  - **Status**: `[Todo]`
+
+- [ ] **Task 19: Implement Custom Shake, Game Over, and Glide animations**
+  - **Description**: Expand `src/render/animation.js` to support Y-axis rotational wobble shakes, Fox rearing, Sheep rapid distressed spinning, and Reset continuous glides.
+  - **Assignee**: Sub-Agent
+  - **Status**: `[Todo]`
+
+- [ ] **Task 20: Connect 3D Assets and UI Controls to Game State**
+  - **Description**: Bind click interactions to `GameState`. Implement the permanent "Move Boat" glassmorphic button. Handle Victory/Game Over modals with 1.5s delay for Game Over. Support hidden 'D' key panel toggles.
+  - **Assignee**: Sub-Agent
+  - **Status**: `[Todo]`

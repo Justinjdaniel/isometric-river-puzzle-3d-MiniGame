@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { setupScene } from './render/scene.js';
 import { createTree, createKayak, createShepherd, createFox, createSheep, createShrub } from './render/assets.js';
-import { animateWater, updateAnimations, setupKeyboardControls, resetAnimations } from './render/animation.js';
+import { animateWater, updateAnimations, setupKeyboardControls, resetAnimations, triggerShake, triggerGameOverCues, clearGameOverCues, triggerResetGlide } from './render/animation.js';
 import { GameState } from './core/state.js';
 import { DEVELOPER_MODE } from './core/constants.js';
 import './style.css';
@@ -15,6 +15,7 @@ const { scene, camera, renderer, waterMesh, onResize } = setupScene(container);
 
 // 3. Create and Place Game Actor Meshes
 const boatMesh = createKayak();
+boatMesh.userData.actorId = 'boat'; // Tag for raycasting identification
 scene.add(boatMesh);
 
 const actorMeshes = {
@@ -24,8 +25,11 @@ const actorMeshes = {
   sheep2: createSheep(0.85, 0.45)           // Cute smaller lamb, slightly rotated
 };
 
-// Add actor meshes to scene (their initial coordinates are managed by the animation system)
-Object.values(actorMeshes).forEach(mesh => scene.add(mesh));
+// Tag actor root groups for raycasting identification and add to scene
+Object.entries(actorMeshes).forEach(([id, mesh]) => {
+  mesh.userData.actorId = id;
+  scene.add(mesh);
+});
 
 // 4. Scatter Stylized Low-Poly Pine Trees on Valley Banks
 const treeCoordinates = [
@@ -95,10 +99,14 @@ shrubCoordinates.forEach((sc, index) => {
   scene.add(shrub);
 });
 
+// Check rules after any movement & lock state tracking
+let gameLoopLocked = false;
+
 // 5. Setup Interactive Glassmorphic UI HUD Updates
 function updateUIOverlay() {
   const ruleResult = gameState.checkRules();
   const boatLoc = gameState.boatLocation.toUpperCase();
+  const devPanelVisible = !!window.devPanelVisible;
 
   // Format actor locations cleanly
   const leftActors = [];
@@ -115,6 +123,8 @@ function updateUIOverlay() {
   // Target elements to update
   const appContainer = document.getElementById('app-container');
   if (!appContainer) return;
+
+  const isShepherdOnBoat = gameState.actorPositions.man === 'boat';
 
   // Let's create a beautiful rich layout
   appContainer.innerHTML = `
@@ -133,6 +143,16 @@ function updateUIOverlay() {
         <h3 class="status-heading">CURRENT GAME STATE</h3>
         <p class="status-item"><strong>Boat Docked:</strong> ${boatLoc}-Bank</p>
         <p class="status-item"><strong>On Boat:</strong> ${boatActors.join(', ') || '<em>Empty</em>'}</p>
+
+        <div class="action-buttons-container">
+          <button class="move-boat-button glass-button ${isShepherdOnBoat ? '' : 'disabled'}" id="move-boat-btn" ${isShepherdOnBoat ? '' : 'disabled'}>
+            ${isShepherdOnBoat ? '⛵ MOVE BOAT' : '🔒 SHEPHERD NEEDED'}
+          </button>
+          <button class="reset-hud-button glass-button" id="hud-reset-btn">
+            🔄 RESET
+          </button>
+        </div>
+
         <hr class="hud-divider" />
         <div class="banks-info">
           <div class="bank-col">
@@ -147,7 +167,7 @@ function updateUIOverlay() {
       </div>
     </div>
 
-    ${DEVELOPER_MODE ? `
+    ${devPanelVisible ? `
     <div class="glass-panel dev-controls-panel">
       <h3 class="status-heading">DEV DEMO CONTROLS</h3>
       <p class="dev-instruction"><kbd>Spacebar</kbd> : Sail Kayak</p>
@@ -159,7 +179,7 @@ function updateUIOverlay() {
     </div>
     ` : ''}
 
-    ${ruleResult !== 'playing' ? `
+    ${(ruleResult !== 'playing' && !gameLoopLocked) ? `
     <div class="modal-overlay">
       <div class="glass-panel terminal-modal ${ruleResult}">
         <h2 class="modal-title">${ruleResult === 'victory' ? '🎉 VICTORY!' : '⚠️ GAME OVER!'}</h2>
@@ -168,26 +188,201 @@ function updateUIOverlay() {
             ? 'Splendid job! You successfully guided the Shepherd, Fox, and Sheep safely to the Right Bank!'
             : 'Oh no! The shepherd left the hungry fox alone with the fluffy sheep on a bank, and the fox ate the sheep!'}
         </p>
-        <button class="reset-button" id="reset-game-btn">Try Again</button>
+        <button class="reset-button" id="reset-game-btn">${ruleResult === 'victory' ? 'Play Again' : 'Try Again'}</button>
       </div>
     </div>
     ` : ''}
 
     <footer class="glass-panel hud-footer">
       <div class="hud-footer-content">
-        Design Step 3 • Modular Scene, Low-Poly Assets & Fluid Parabolic Animations
+        Design Step 4 • Interactive Gameplay, Raycasting, & Game Flow
       </div>
     </footer>
   `;
 
-  // Attach event listener to reset button if it exists
+  // Attach event listener to modal reset button if it exists
   const resetBtn = document.getElementById('reset-game-btn');
   if (resetBtn) {
     resetBtn.addEventListener('click', () => {
       gameState.reset();
-      resetAnimations();
+      triggerResetGlide();
       updateUIOverlay();
     });
+  }
+
+  // Attach event listener to HUD standard reset button
+  const hudResetBtn = document.getElementById('hud-reset-btn');
+  if (hudResetBtn) {
+    hudResetBtn.addEventListener('click', () => {
+      gameState.reset();
+      triggerResetGlide();
+      updateUIOverlay();
+    });
+  }
+
+  // Attach event listener to move boat button
+  const moveBoatBtn = document.getElementById('move-boat-btn');
+  if (moveBoatBtn && isShepherdOnBoat) {
+    moveBoatBtn.addEventListener('click', () => {
+      handleBoatMove();
+    });
+  }
+}
+
+// 5b. Mouse/Touch Click Raycasting & Hover Pointers
+const raycaster = new THREE.Raycaster();
+const mouse = new THREE.Vector2();
+
+function getInteractiveRoot(object) {
+  let curr = object;
+  while (curr) {
+    if (curr.userData && curr.userData.actorId) {
+      return curr;
+    }
+    curr = curr.parent;
+  }
+  return null;
+}
+
+// Mouse Move event to update cursor pointer
+window.addEventListener('mousemove', (e) => {
+  if (gameState.checkRules() !== 'playing') {
+    document.body.style.cursor = 'default';
+    return;
+  }
+
+  const rect = renderer.domElement.getBoundingClientRect();
+  mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+  mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+
+  raycaster.setFromCamera(mouse, camera);
+
+  const targets = [boatMesh, ...Object.values(actorMeshes)];
+  const intersects = raycaster.intersectObjects(targets, true);
+
+  if (intersects.length > 0) {
+    const root = getInteractiveRoot(intersects[0].object);
+    if (root) {
+      document.body.style.cursor = 'pointer';
+      return;
+    }
+  }
+  document.body.style.cursor = 'default';
+});
+
+// Click/Touch Tap Handler
+function handleInteraction(clientX, clientY) {
+  if (gameState.checkRules() !== 'playing') return;
+
+  const rect = renderer.domElement.getBoundingClientRect();
+  mouse.x = ((clientX - rect.left) / rect.width) * 2 - 1;
+  mouse.y = -((clientY - rect.top) / rect.height) * 2 + 1;
+
+  raycaster.setFromCamera(mouse, camera);
+
+  const targets = [boatMesh, ...Object.values(actorMeshes)];
+  const intersects = raycaster.intersectObjects(targets, true);
+
+  if (intersects.length > 0) {
+    const root = getInteractiveRoot(intersects[0].object);
+    if (root) {
+      const actorId = root.userData.actorId;
+      if (actorId === 'boat') {
+        handleBoatMove();
+      } else {
+        handleActorClick(actorId);
+      }
+    }
+  }
+}
+
+window.addEventListener('click', (e) => {
+  if (e.target.closest('.glass-panel') || e.target.closest('.modal-overlay')) return;
+  handleInteraction(e.clientX, e.clientY);
+});
+
+window.addEventListener('touchend', (e) => {
+  if (e.target.closest('.glass-panel') || e.target.closest('.modal-overlay')) return;
+  if (e.changedTouches && e.changedTouches.length > 0) {
+    const touch = e.changedTouches[0];
+    handleInteraction(touch.clientX, touch.clientY);
+  }
+});
+
+// Actor click logic (State Machine binding)
+function handleActorClick(actorId) {
+  const currentPos = gameState.actorPositions[actorId];
+  let success = false;
+
+  if (currentPos === 'boat') {
+    success = gameState.unloadFromBoat(actorId);
+  } else {
+    success = gameState.loadToBoat(actorId);
+  }
+
+  if (success) {
+    // Refresh UI Overlay and check rules
+    updateUIOverlay();
+    checkGameLoopRules();
+  } else {
+    // Subtle visual rotational wobble/shake feedback
+    triggerShake(actorId);
+  }
+}
+
+// Boat move logic (State Machine binding)
+function handleBoatMove() {
+  if (gameState.moveBoat()) {
+    updateUIOverlay();
+    checkGameLoopRules();
+  } else {
+    // If Shepherd is not on board, shake the kayak
+    triggerShake('man'); // Shake shepherd to show they are required, or shake the boat?
+    // Since shepherd is required, let's also trigger shake on the boat mesh itself if needed, or shake 'man'.
+    // Shaking the boat mesh itself can also be done. Let's add 'boat' to triggerShake support!
+    // But shaking 'man' (or both) is extremely helpful feedback. Let's trigger shake on 'man' if not on boat.
+  }
+}
+
+// Check rules after any movement
+function checkGameLoopRules() {
+  const result = gameState.checkRules();
+  if (result === 'playing') return;
+
+  if (result === 'victory') {
+    // Instant display of victory modal as there is no sad loss event
+    updateUIOverlay();
+  } else if (result === 'game_over_fox_ate_sheep') {
+    gameLoopLocked = true;
+
+    // Find which sheep was left alone with the fox on the same bank (without shepherd)
+    const banks = ['left', 'right'];
+    let eatenSheep = 'sheep1'; // fallback
+    for (const bank of banks) {
+      const manPresent = gameState._isPresentOnBank('man', bank);
+      const foxPresent = gameState._isPresentOnBank('fox', bank);
+      const sheep1Present = gameState._isPresentOnBank('sheep1', bank);
+      const sheep2Present = gameState._isPresentOnBank('sheep2', bank);
+
+      if (!manPresent && foxPresent) {
+        if (sheep1Present) {
+          eatenSheep = 'sheep1';
+          break;
+        } else if (sheep2Present) {
+          eatenSheep = 'sheep2';
+          break;
+        }
+      }
+    }
+
+    // Trigger visual game over cues
+    triggerGameOverCues(eatenSheep);
+
+    // Delay game over modal by 1.5 seconds
+    setTimeout(() => {
+      gameLoopLocked = false;
+      updateUIOverlay();
+    }, 1500);
   }
 }
 
