@@ -215,8 +215,8 @@ class SoundManager {
     const now = this.ctx.currentTime;
     osc.type = 'triangle';
     osc.frequency.setValueAtTime(150, now);
-    osc.frequency.quadraticRampToValueAtTime(320, now + 0.18);
-    osc.frequency.quadraticRampToValueAtTime(120, now + 0.35);
+    osc.frequency.exponentialRampToValueAtTime(320, now + 0.18);
+    osc.frequency.exponentialRampToValueAtTime(120, now + 0.35);
 
     gain.gain.setValueAtTime(0.15, now);
     gain.gain.setValueAtTime(0.15, now + 0.18);

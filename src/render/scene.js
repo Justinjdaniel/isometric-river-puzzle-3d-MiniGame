@@ -491,12 +491,12 @@ function addEarthStrata(scene) {
     roughness: 0.95
   });
 
-  const w = BOUNDS.CHUNK_WIDTH;  // 18.4
-  const d = BOUNDS.CHUNK_DEPTH;  // 13.8
-  const halfW = w / 2;           // 9.2
-  const halfD = d / 2;           // 6.9
-  const bankW = (w - BOUNDS.RIVER_WIDTH) / 2; // (18.4 - 5) / 2 = 6.7
-  const bankCenter = BOUNDS.RIVER_WIDTH / 2 + bankW / 2; // 2.5 + 3.35 = 5.85
+  const w = BOUNDS.CHUNK_WIDTH;
+  const d = BOUNDS.CHUNK_DEPTH;
+  const halfW = w / 2;
+  const halfD = d / 2;
+  const bankW = (w - BOUNDS.RIVER_WIDTH) / 2;
+  const bankCenter = BOUNDS.RIVER_WIDTH / 2 + bankW / 2;
 
   const strataBands = [
     // 1. Front cutouts (at Z = halfD + 0.01, spanning along X)

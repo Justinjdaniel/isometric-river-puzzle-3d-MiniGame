@@ -125,6 +125,7 @@ for (let i = 0; i < numClouds; i++) {
   // Randomized gentle drift speeds (units per second)
   cloudMesh.userData = {
     driftSpeed: 0.15 + Math.random() * 0.25, // 0.15 to 0.40 units per second
+    baseY: initialY,
     baseZ: initialZ
   };
 
@@ -485,7 +486,7 @@ window.addEventListener('touchend', (e) => {
 // 5c. Mouse Wheel Zoom for Orthographic Camera
 window.addEventListener('wheel', (e) => {
   // Prevent default scroll behavior inside canvas
-  if (e.target.closest('#canvas-container') || e.target.tagName === 'CANVAS') {
+  if (e.target && typeof e.target.closest === 'function' && (e.target.closest('#canvas-container') || e.target.tagName === 'CANVAS')) {
     e.preventDefault();
   }
 
@@ -611,11 +612,11 @@ function animate() {
     if (cloud.position.x > wrapRight) {
       cloud.position.x = wrapLeft;
       // Slightly randomize its Y and Z again on wrap-around for endless variety
-      cloud.position.y = 5.5 + Math.random() * 2.3;
+      cloud.userData.baseY = 5.5 + Math.random() * 2.3;
       cloud.position.z = -3.5 - Math.random() * 4.0;
     }
-    // Subtle additional bobbing along the Z/Y axes
-    cloud.position.y += Math.sin(elapsedTime * 0.8 + cloud.position.x) * 0.003;
+    // Subtle additional bobbing along the Y axis (stable and frame-rate independent)
+    cloud.position.y = cloud.userData.baseY + Math.sin(elapsedTime * 0.8 + cloud.position.x) * 0.1;
   });
 
   // 3. Update boat/actors smooth transitions and bobbing
