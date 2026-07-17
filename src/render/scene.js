@@ -27,8 +27,8 @@ export function isPositionSafe(x, z, r = 0.1, checkPlayArea = true) {
   const mountainList = [
     { x: -8.5, z: -4.5, r: 3.5 },
     { x: -4.2, z: -4.8, r: 2.8 },
-    { x: 5.2, z: -4.8, r: 4.0 },
-    { x: 9.3, z: -5.1, r: 3.4 }
+    { x: 6.8, z: -5.8, r: 3.8 },
+    { x: 10.5, z: -5.1, r: 3.4 }
   ];
   for (const m of mountainList) {
     const dx = x - m.x;
@@ -408,8 +408,8 @@ function createBackgroundMountains(scene) {
   const mountainList = [
     { x: -8.5, y: -1.0, z: -4.5, h: 9.5, r: 3.5 },
     { x: -4.2, y: -1.5, z: -4.8, h: 7.0, r: 2.8 },
-    { x: 5.2, y: -1.0, z: -4.8, h: 10.5, r: 4.0 },
-    { x: 9.3, y: -1.2, z: -5.1, h: 9.0, r: 3.4 }
+    { x: 6.8, y: -1.0, z: -5.8, h: 10.5, r: 3.8 },
+    { x: 10.5, y: -1.2, z: -5.1, h: 9.0, r: 3.4 }
   ];
 
   mountainList.forEach(m => {
@@ -634,8 +634,8 @@ function addMountainFoothills(scene) {
   const hills = [
     { x: -6.5, y: -0.4, z: -5.2, w: 2.8, h: 0.8, d: 2.5 },
     { x: -4.2, y: -0.5, z: -5.4, w: 2.2, h: 0.6, d: 2.0 },
-    { x:  7.2, y: -0.4, z: -5.4, w: 2.8, h: 0.8, d: 2.5 },
-    { x:  4.9, y: -0.5, z: -5.6, w: 2.2, h: 0.6, d: 2.0 },
+    { x:  8.4, y: -0.4, z: -5.4, w: 2.8, h: 0.8, d: 2.5 },
+    { x:  6.2, y: -0.5, z: -5.8, w: 2.2, h: 0.6, d: 2.0 },
     { x:  0.0, y: -1.0, z: -5.8, w: 4.8, h: 0.5, d: 1.8 }
   ];
 
