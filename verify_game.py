@@ -4,7 +4,8 @@ from playwright.sync_api import sync_playwright
 def run_cuj(page):
     print("[Playwright] Loading River Puzzle 3D...")
     page.goto("http://localhost:3000")
-    page.wait_for_timeout(1000)
+    page.wait_for_selector("#canvas-container")
+    page.wait_for_timeout(500)
 
     print("[Playwright] Toggling Developer Mode...")
     page.keyboard.press("KeyD")

@@ -44,6 +44,9 @@ const sharedDeciduousTrunkGeom = new THREE.CylinderGeometry(0.1, 0.16, 1.1, 8);
 const sharedBranchGeom = new THREE.CylinderGeometry(0.05, 0.07, 0.55, 6);
 const sharedCanopyGeom = new THREE.DodecahedronGeometry(0.44, 0);
 
+// Shrub Shared Geometry
+const sharedShrubGeom = new THREE.DodecahedronGeometry(0.3, 0);
+
 // Shared Foliage Materials
 const sharedFoliageMaterials = TREE_GREENS.map(color => new THREE.MeshStandardMaterial({
   color,
@@ -777,8 +780,8 @@ export function createShrub(scale = 1.0, shadeIndex = 0) {
   twig.position.y = 0.15;
   shrubGroup.add(twig);
 
-  // 4 overlapping faceted dodecahedrons representing organic foliage
-  const sphereGeom = new THREE.DodecahedronGeometry(0.3, 0);
+  // 4 overlapping faceted dodecahedrons representing organic foliage (using shared geometry to prevent GC overhead)
+  const sphereGeom = sharedShrubGeom;
 
   // Central cluster
   const c1 = new THREE.Mesh(sphereGeom, leafMaterial);
