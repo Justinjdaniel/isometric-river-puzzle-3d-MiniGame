@@ -44,12 +44,15 @@ export class GameState {
    * @returns {boolean} - true if boarding succeeded, false otherwise
    */
   loadToBoat(actor) {
+    // SECURITY: Use a strict frozen whitelist of allowed keys to prevent potential Prototype Pollution or invalid keys
+    const VALID_ACTORS = Object.freeze(['man', 'fox', 'sheep1', 'sheep2']);
+
     if (this.checkRules() !== 'playing') {
       console.warn(`[GameState] loadToBoat failed: Game is already in a terminal state`);
       return false;
     }
 
-    if (!this.actorPositions.hasOwnProperty(actor)) {
+    if (!VALID_ACTORS.includes(actor)) {
       console.warn(`[GameState] loadToBoat failed: Invalid actor "${actor}"`);
       return false;
     }
@@ -85,12 +88,15 @@ export class GameState {
    * @returns {boolean} - true if unloading succeeded, false otherwise
    */
   unloadFromBoat(actor) {
+    // SECURITY: Use a strict frozen whitelist of allowed keys to prevent potential Prototype Pollution or invalid keys
+    const VALID_ACTORS = Object.freeze(['man', 'fox', 'sheep1', 'sheep2']);
+
     if (this.checkRules() !== 'playing') {
       console.warn(`[GameState] unloadFromBoat failed: Game is already in a terminal state`);
       return false;
     }
 
-    if (!this.actorPositions.hasOwnProperty(actor)) {
+    if (!VALID_ACTORS.includes(actor)) {
       console.warn(`[GameState] unloadFromBoat failed: Invalid actor "${actor}"`);
       return false;
     }
