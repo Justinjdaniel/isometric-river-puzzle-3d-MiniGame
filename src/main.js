@@ -157,10 +157,12 @@ function ensureUIShell() {
       <!-- Card 1: Game Controls -->
       <div class="glass-panel hud-card card-collapsible" id="card-controls">
         <div class="card-header-row" id="header-controls">
-          <button class="card-toggle-button" id="controls-collapse-btn" aria-expanded="true" aria-controls="card-controls-body" aria-label="Toggle Game Controls card content">
+          <div style="display: flex; align-items: center; gap: 12px;">
             <h3 class="status-heading" style="margin: 0;">🎮 GAME CONTROLS</h3>
-            <span class="collapse-icon" id="controls-collapse-icon" aria-hidden="true">▲</span>
-          </button>
+            <button class="card-toggle-button" id="controls-collapse-btn" aria-expanded="true" aria-controls="card-controls-body" aria-label="Toggle Game Controls card content">
+              <span class="collapse-icon" id="controls-collapse-icon" aria-hidden="true">▲</span>
+            </button>
+          </div>
           <div style="display: flex; gap: 8px; align-items: center; pointer-events: auto;">
             <button class="settings-gear-btn" id="instructions-trigger-btn" title="View Mission & Rules" aria-label="View Mission and Rules">
               ℹ️
@@ -192,10 +194,12 @@ function ensureUIShell() {
       <!-- Card 2: Bank Layout -->
       <div class="glass-panel hud-card card-collapsible" id="card-layout">
         <div class="card-header-row" id="header-layout">
-          <button class="card-toggle-button" id="layout-collapse-btn" aria-expanded="true" aria-controls="card-layout-body" aria-label="Toggle Bank Layout card content" style="width: 100%; justify-content: space-between;">
+          <div style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
             <h3 class="status-heading" style="margin: 0;">🏝️ BANK LAYOUT</h3>
-            <span class="collapse-icon" id="layout-collapse-icon" aria-hidden="true">▲</span>
-          </button>
+            <button class="card-toggle-button" id="layout-collapse-btn" aria-expanded="true" aria-controls="card-layout-body" aria-label="Toggle Bank Layout card content">
+              <span class="collapse-icon" id="layout-collapse-icon" aria-hidden="true">▲</span>
+            </button>
+          </div>
         </div>
 
         <div class="card-body-wrapper" id="card-layout-body">

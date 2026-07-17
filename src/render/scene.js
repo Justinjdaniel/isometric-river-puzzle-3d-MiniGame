@@ -254,6 +254,9 @@ export function setupScene(container) {
   };
   window.addEventListener('resize', onResize);
 
+  // Invoke onResize immediately to apply correct aspect ratio rules before the first render
+  onResize();
+
   return {
     scene,
     camera,
