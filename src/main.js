@@ -111,9 +111,11 @@ for (let i = 0; i < numClouds; i++) {
 let gameLoopLocked = false;
 let gameOverTimeout = null;
 
-// 5. Track Settings & Instructions Dialog state
+// 5. Track Settings, Instructions, Stats & Rules modal states
 let settingsOpen = false;
 let instructionsOpen = false;
+let statsModalOpen = false;
+let rulesModalOpen = false;
 
 // UI Minimization State tracking
 const collapsedCards = {
@@ -137,24 +139,39 @@ function ensureUIShell() {
       </header>
     </div>
 
+    <!-- Mobile Top Navigation Bar -->
+    <div class="mobile-top-bar">
+      <button class="mobile-nav-btn glass-panel" id="mobile-rules-btn" title="View Rules">
+        📖 Rules
+      </button>
+      <button class="mobile-nav-btn glass-panel" id="mobile-stats-btn" title="View Stats">
+        📊 Stats
+      </button>
+      <button class="mobile-nav-btn glass-panel" id="mobile-settings-btn" title="Open Settings">
+        ⚙️
+      </button>
+    </div>
+
     <!-- Right Panel: Unified Stats, Game Controls, and Settings Card -->
     <div class="right-hud-panel">
       <!-- Card 1: Game Controls -->
       <div class="glass-panel hud-card card-collapsible" id="card-controls">
-        <div class="card-header-row clickable-header" id="header-controls">
-          <h3 class="status-heading">🎮 GAME CONTROLS</h3>
+        <div class="card-header-row" id="header-controls">
+          <button class="card-toggle-button" id="controls-collapse-btn" aria-expanded="true" aria-controls="card-controls-body" aria-label="Toggle Game Controls card content">
+            <h3 class="status-heading" style="margin: 0;">🎮 GAME CONTROLS</h3>
+            <span class="collapse-icon" id="controls-collapse-icon" aria-hidden="true">▲</span>
+          </button>
           <div style="display: flex; gap: 8px; align-items: center; pointer-events: auto;">
-            <button class="settings-gear-btn" id="instructions-trigger-btn" title="View Mission & Rules">
+            <button class="settings-gear-btn" id="instructions-trigger-btn" title="View Mission & Rules" aria-label="View Mission and Rules">
               ℹ️
             </button>
-            <button class="settings-gear-btn" id="settings-trigger-btn" title="Open Settings Dialog">
+            <button class="settings-gear-btn" id="settings-trigger-btn" title="Open Settings Dialog" aria-label="Open Settings Dialog">
               ⚙️
             </button>
-            <span class="collapse-icon" id="controls-collapse-icon">▲</span>
           </div>
         </div>
 
-        <div class="card-body-wrapper">
+        <div class="card-body-wrapper" id="card-controls-body">
           <p class="status-item"><strong>Boat Docked:</strong> <span id="val-boat-docked">LEFT-Bank</span></p>
           <p class="status-item"><strong>On Boat:</strong> <span id="val-boat-actors"><em>Empty</em></span></p>
 
@@ -165,7 +182,7 @@ function ensureUIShell() {
 
           <div class="action-buttons-container">
             <button class="move-boat-button glass-button" id="move-boat-btn"></button>
-            <button class="reset-hud-button glass-button" id="hud-reset-btn">
+            <button class="reset-hud-button glass-button" id="hud-reset-btn" aria-label="Reset the game">
               🔄 RESET
             </button>
           </div>
@@ -174,12 +191,14 @@ function ensureUIShell() {
 
       <!-- Card 2: Bank Layout -->
       <div class="glass-panel hud-card card-collapsible" id="card-layout">
-        <div class="card-header-row clickable-header" id="header-layout">
-          <h3 class="status-heading">🏝️ BANK LAYOUT</h3>
-          <span class="collapse-icon" id="layout-collapse-icon" style="margin-left: auto;">▲</span>
+        <div class="card-header-row" id="header-layout">
+          <button class="card-toggle-button" id="layout-collapse-btn" aria-expanded="true" aria-controls="card-layout-body" aria-label="Toggle Bank Layout card content" style="width: 100%; justify-content: space-between;">
+            <h3 class="status-heading" style="margin: 0;">🏝️ BANK LAYOUT</h3>
+            <span class="collapse-icon" id="layout-collapse-icon" aria-hidden="true">▲</span>
+          </button>
         </div>
 
-        <div class="card-body-wrapper">
+        <div class="card-body-wrapper" id="card-layout-body">
           <div class="banks-info">
             <div class="bank-col">
               <strong>Left Bank</strong>
@@ -197,6 +216,14 @@ function ensureUIShell() {
       <div id="dev-controls-container"></div>
     </div>
 
+    <!-- Pinned Mobile Bottom Bar with "Move Boat" and "Reset" -->
+    <div class="mobile-bottom-bar">
+      <button class="move-boat-button glass-button mobile-pill-btn" id="mobile-move-boat-btn"></button>
+      <button class="reset-hud-button glass-button mobile-reset-btn" id="mobile-reset-btn">
+        🔄 RESET
+      </button>
+    </div>
+
     <!-- Modals Container -->
     <div id="modal-container"></div>
 
@@ -208,18 +235,17 @@ function ensureUIShell() {
   `;
 
   // Attach card collapse listeners exactly once
-  const headerControls = document.getElementById('header-controls');
-  if (headerControls) {
-    headerControls.addEventListener('click', (e) => {
-      if (e.target.closest('button')) return;
+  const controlsCollapseBtn = document.getElementById('controls-collapse-btn');
+  if (controlsCollapseBtn) {
+    controlsCollapseBtn.addEventListener('click', () => {
       collapsedCards.controls = !collapsedCards.controls;
       updateUIOverlay();
     });
   }
 
-  const headerLayout = document.getElementById('header-layout');
-  if (headerLayout) {
-    headerLayout.addEventListener('click', () => {
+  const layoutCollapseBtn = document.getElementById('layout-collapse-btn');
+  if (layoutCollapseBtn) {
+    layoutCollapseBtn.addEventListener('click', () => {
       collapsedCards.layout = !collapsedCards.layout;
       updateUIOverlay();
     });
@@ -251,15 +277,37 @@ function ensureUIShell() {
   const hudResetBtn = document.getElementById('hud-reset-btn');
   if (hudResetBtn) {
     hudResetBtn.addEventListener('click', () => {
+      resetGame();
+    });
+  }
+
+  // Mobile navigation button listeners
+  const mobRulesBtn = document.getElementById('mobile-rules-btn');
+  if (mobRulesBtn) {
+    mobRulesBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
       soundManager.init();
-      if (gameOverTimeout) {
-        clearTimeout(gameOverTimeout);
-        gameOverTimeout = null;
-      }
-      gameLoopLocked = false;
-      gameState.reset();
-      triggerResetGlide();
-      soundManager.playToggleOn();
+      rulesModalOpen = true;
+      updateUIOverlay();
+    });
+  }
+
+  const mobStatsBtn = document.getElementById('mobile-stats-btn');
+  if (mobStatsBtn) {
+    mobStatsBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      soundManager.init();
+      statsModalOpen = true;
+      updateUIOverlay();
+    });
+  }
+
+  const mobSettingsBtn = document.getElementById('mobile-settings-btn');
+  if (mobSettingsBtn) {
+    mobSettingsBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      soundManager.init();
+      settingsOpen = true;
       updateUIOverlay();
     });
   }
@@ -274,7 +322,38 @@ function ensureUIShell() {
     });
   }
 
+  // Attach mobile move boat button
+  const mobMoveBoatBtn = document.getElementById('mobile-move-boat-btn');
+  if (mobMoveBoatBtn) {
+    mobMoveBoatBtn.addEventListener('click', () => {
+      if (gameState.actorPositions.man === 'boat') {
+        handleBoatMove();
+      }
+    });
+  }
+
+  // Attach mobile reset button
+  const mobResetBtn = document.getElementById('mobile-reset-btn');
+  if (mobResetBtn) {
+    mobResetBtn.addEventListener('click', () => {
+      resetGame();
+    });
+  }
+
   uiInitialized = true;
+}
+
+function resetGame() {
+  soundManager.init();
+  if (gameOverTimeout) {
+    clearTimeout(gameOverTimeout);
+    gameOverTimeout = null;
+  }
+  gameLoopLocked = false;
+  gameState.reset();
+  triggerResetGlide();
+  soundManager.playToggleOn();
+  updateUIOverlay();
 }
 
 // Setup Interactive Glassmorphic UI HUD Updates - Targeted element updates to avoid performance lags
@@ -322,6 +401,14 @@ function updateUIOverlay() {
     elMoveBoatBtn.disabled = !isShepherdOnBoat;
   }
 
+  // Update mobile move boat button too
+  const elMobMoveBoatBtn = document.getElementById('mobile-move-boat-btn');
+  if (elMobMoveBoatBtn) {
+    elMobMoveBoatBtn.className = `move-boat-button glass-button mobile-pill-btn ${isShepherdOnBoat ? '' : 'disabled'}`;
+    elMobMoveBoatBtn.textContent = isShepherdOnBoat ? '⛵ MOVE BOAT' : '🔒 SHEPHERD NEEDED';
+    elMobMoveBoatBtn.disabled = !isShepherdOnBoat;
+  }
+
   // 2. Update Left and Right banks list in Bank Layout card
   const elLeftList = document.getElementById('val-left-bank-list');
   if (elLeftList) {
@@ -335,9 +422,15 @@ function updateUIOverlay() {
 
   // 3. Update collapsible classes and icons dynamically
   const cardControls = document.getElementById('card-controls');
+  const btnControls = document.getElementById('controls-collapse-btn');
   if (cardControls) {
-    if (collapsedCards.controls) cardControls.classList.add('collapsed');
-    else cardControls.classList.remove('collapsed');
+    if (collapsedCards.controls) {
+      cardControls.classList.add('collapsed');
+      if (btnControls) btnControls.setAttribute('aria-expanded', 'false');
+    } else {
+      cardControls.classList.remove('collapsed');
+      if (btnControls) btnControls.setAttribute('aria-expanded', 'true');
+    }
   }
 
   const iconControls = document.getElementById('controls-collapse-icon');
@@ -346,9 +439,15 @@ function updateUIOverlay() {
   }
 
   const cardLayout = document.getElementById('card-layout');
+  const btnLayout = document.getElementById('layout-collapse-btn');
   if (cardLayout) {
-    if (collapsedCards.layout) cardLayout.classList.add('collapsed');
-    else cardLayout.classList.remove('collapsed');
+    if (collapsedCards.layout) {
+      cardLayout.classList.add('collapsed');
+      if (btnLayout) btnLayout.setAttribute('aria-expanded', 'false');
+    } else {
+      cardLayout.classList.remove('collapsed');
+      if (btnLayout) btnLayout.setAttribute('aria-expanded', 'true');
+    }
   }
 
   const iconLayout = document.getElementById('layout-collapse-icon');
@@ -400,7 +499,7 @@ function updateUIOverlay() {
           </div>
         </div>
       `;
-    } else if (instructionsOpen) {
+    } else if (instructionsOpen || rulesModalOpen) {
       modalHTML = `
         <div class="modal-overlay" id="instructions-modal-overlay">
           <div class="glass-panel terminal-modal" style="width: 480px; text-align: left;">
@@ -425,6 +524,36 @@ function updateUIOverlay() {
             </div>
             <div style="text-align: center; margin-top: 25px;">
               <button class="reset-button" id="instructions-close-btn">Close Instructions</button>
+            </div>
+          </div>
+        </div>
+      `;
+    } else if (statsModalOpen) {
+      modalHTML = `
+        <div class="modal-overlay" id="stats-modal-overlay">
+          <div class="glass-panel terminal-modal" style="width: 420px; text-align: left;">
+            <h2 class="modal-title" style="color: #014f86; margin-bottom: 15px; text-align: center;">📊 GAME STATUS</h2>
+            <div class="instructions-card-content">
+              <p class="status-item"><strong>Boat Docked:</strong> ${boatLoc}-Bank</p>
+              <p class="status-item"><strong>On Boat:</strong> ${boatActors.join(', ') || '<em>Empty</em>'}</p>
+              <div class="status-item highlight-moves" style="margin: 12px 0;">
+                <strong>Moves:</strong>
+                <span class="moves-count">${gameState.moves}</span>
+              </div>
+              <hr class="hud-divider" />
+              <div class="banks-info">
+                <div class="bank-col">
+                  <strong>Left Bank</strong>
+                  <ul>${leftActors.map(a => `<li>${a}</li>`).join('') || '<li><em>None</em></li>'}</ul>
+                </div>
+                <div class="bank-col">
+                  <strong>Right Bank</strong>
+                  <ul>${rightActors.map(a => `<li>${a}</li>`).join('') || '<li><em>None</em></li>'}</ul>
+                </div>
+              </div>
+            </div>
+            <div style="text-align: center; margin-top: 25px;">
+              <button class="reset-button" id="stats-close-btn">Close Stats</button>
             </div>
           </div>
         </div>
@@ -467,11 +596,20 @@ function updateUIOverlay() {
           }
         });
       }
-    } else if (instructionsOpen) {
+    } else if (instructionsOpen || rulesModalOpen) {
       const instructionsCloseBtn = document.getElementById('instructions-close-btn');
       if (instructionsCloseBtn) {
         instructionsCloseBtn.addEventListener('click', () => {
           instructionsOpen = false;
+          rulesModalOpen = false;
+          updateUIOverlay();
+        });
+      }
+    } else if (statsModalOpen) {
+      const statsCloseBtn = document.getElementById('stats-close-btn');
+      if (statsCloseBtn) {
+        statsCloseBtn.addEventListener('click', () => {
+          statsModalOpen = false;
           updateUIOverlay();
         });
       }
@@ -564,15 +702,17 @@ function handleInteraction(clientX, clientY) {
 }
 
 window.addEventListener('click', (e) => {
-  if (e.target.closest('.glass-panel') || e.target.closest('.modal-overlay')) return;
+  // Ignore clicks that originate on interactive UI elements
+  if (e.target.closest('.glass-panel') || e.target.closest('.modal-overlay') || e.target.closest('.mobile-top-bar') || e.target.closest('.mobile-bottom-bar')) return;
   handleInteraction(e.clientX, e.clientY);
 });
 
-window.addEventListener('touchend', (e) => {
-  if (e.target.closest('.glass-panel') || e.target.closest('.modal-overlay')) return;
-  if (e.changedTouches && e.changedTouches.length > 0) {
-    e.preventDefault();
-    const touch = e.changedTouches[0];
+window.addEventListener('touchstart', (e) => {
+  // Ignore touch events that originate on interactive UI elements
+  if (e.target.closest('.glass-panel') || e.target.closest('.modal-overlay') || e.target.closest('.mobile-top-bar') || e.target.closest('.mobile-bottom-bar')) return;
+  if (e.touches && e.touches.length > 0) {
+    e.preventDefault(); // Stop overlapping synthesized mouse/click events immediately
+    const touch = e.touches[0];
     handleInteraction(touch.clientX, touch.clientY);
   }
 }, { passive: false });

@@ -11,6 +11,44 @@ html, body {
   color: #ffffff;
 }
 
+/* Keyboard accessibility focus states */
+:focus-visible {
+  outline: 3px solid #014f86;
+  outline-offset: 3px;
+}
+
+.card-toggle-button {
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  text-align: left;
+  font-family: inherit;
+  color: inherit;
+}
+
+.card-toggle-button:focus-visible {
+  outline: 3px solid #2a6f97;
+  outline-offset: 4px;
+  border-radius: 8px;
+}
+
+.card-toggle-button:hover .status-heading {
+  color: #2a6f97;
+}
+
+.glass-button:focus-visible,
+.settings-gear-btn:focus-visible,
+.reset-button:focus-visible,
+.toggle-switch input:focus-visible + .toggle-slider {
+  outline: 3px solid #2a6f97;
+  outline-offset: 2px;
+}
+
 #canvas-container {
   position: absolute;
   top: 0;
@@ -477,6 +515,84 @@ input:checked + .toggle-slider:before {
   color: rgba(255, 255, 255, 0.5);
 }
 
+/* Mobile top and bottom layout bars (hidden on desktop) */
+.mobile-top-bar {
+  display: none;
+  position: absolute;
+  top: 15px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+  gap: 10px;
+  pointer-events: auto;
+}
+
+.mobile-nav-btn {
+  border: none;
+  font-size: 0.9rem;
+  font-weight: bold;
+  cursor: pointer;
+  padding: 10px 16px;
+  border-radius: 20px;
+}
+
+.mobile-bottom-bar {
+  display: none;
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+  width: 90%;
+  max-width: 400px;
+  gap: 10px;
+  pointer-events: auto;
+}
+
+.mobile-pill-btn {
+  flex: 2;
+  border-radius: 30px !important;
+  font-size: 1rem !important;
+  padding: 14px 20px !important;
+}
+
+.mobile-reset-btn {
+  flex: 1;
+  border-radius: 30px !important;
+  font-size: 0.9rem !important;
+  padding: 14px 16px !important;
+}
+
+/* Responsiveness Media Queries */
+@media (max-width: 768px), (orientation: portrait) {
+  /* Hide the desktop HUD panels to maximize the 3D canvas visibility */
+  .top-left-floating-header,
+  .right-hud-panel,
+  .hud-footer {
+    display: none !important;
+  }
+
+  /* Show the optimized mobile top & bottom layout bars */
+  .mobile-top-bar {
+    display: flex !important;
+  }
+
+  .mobile-bottom-bar {
+    display: flex !important;
+  }
+
+  /* Shrink modal window sizes slightly for mobile screens */
+  .terminal-modal {
+    width: 90% !important;
+    max-width: 380px !important;
+    padding: 20px !important;
+  }
+
+  .modal-title {
+    font-size: 1.5rem !important;
+  }
+}
+
 /* Moves counter highlight styles */
 .highlight-moves {
   display: flex;
@@ -500,15 +616,6 @@ input:checked + .toggle-slider:before {
 }
 
 /* Collapsible HUD Cards with Smooth CSS transition */
-.clickable-header {
-  cursor: pointer;
-  user-select: none;
-}
-
-.clickable-header:hover .status-heading {
-  color: #2a6f97;
-}
-
 .collapse-icon {
   font-size: 0.8rem;
   color: #014f86;
