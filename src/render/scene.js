@@ -33,8 +33,9 @@ export function isPositionSafe(x, z, r = 0.1, checkPlayArea = true) {
   for (const m of mountainList) {
     const dx = x - m.x;
     const dz = z - m.z;
-    const dist = Math.sqrt(dx * dx + dz * dz);
-    if (dist < m.r + r - 0.2) return false; // Allow slight foliage overlap but not trunk/base
+    const distSq = dx * dx + dz * dz;
+    const limit = m.r + r - 0.2;
+    if (distSq < limit * limit) return false; // Allow slight foliage overlap but not trunk/base
   }
 
   return true;

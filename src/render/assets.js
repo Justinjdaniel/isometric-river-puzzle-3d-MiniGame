@@ -8,6 +8,49 @@ const TREE_GREENS = [
   COLORS.PINE_DEEP
 ];
 
+// Reusable/cached geometries and materials to avoid memory and garbage collection overhead
+const sharedTrunkMaterial = new THREE.MeshStandardMaterial({
+  color: 0x4a2e1b,
+  flatShading: true,
+  roughness: 0.9
+});
+
+const sharedDeciduousTrunkMaterial = new THREE.MeshStandardMaterial({
+  color: 0x5c3d24,
+  flatShading: true,
+  roughness: 0.9
+});
+
+const sharedPineConeMaterial = new THREE.MeshStandardMaterial({
+  color: 0x3d2715,
+  flatShading: true,
+  roughness: 0.95
+});
+
+const sharedTrunkGeom = new THREE.CylinderGeometry(0.08, 0.16, 1.0, 8);
+const sharedStumpGeom = new THREE.CylinderGeometry(0.03, 0.04, 0.25, 5);
+const sharedPineConeGeom = new THREE.DodecahedronGeometry(0.07, 0);
+
+// Foliage level geometries for Conifer trees
+const levelGeometries = [
+  new THREE.ConeGeometry(0.85, 0.9, 8),
+  new THREE.ConeGeometry(0.70, 0.8, 8),
+  new THREE.ConeGeometry(0.55, 0.7, 8),
+  new THREE.ConeGeometry(0.40, 0.55, 8)
+];
+
+// Deciduous Tree Shared Assets
+const sharedDeciduousTrunkGeom = new THREE.CylinderGeometry(0.1, 0.16, 1.1, 8);
+const sharedBranchGeom = new THREE.CylinderGeometry(0.05, 0.07, 0.55, 6);
+const sharedCanopyGeom = new THREE.DodecahedronGeometry(0.44, 0);
+
+// Shared Foliage Materials
+const sharedFoliageMaterials = TREE_GREENS.map(color => new THREE.MeshStandardMaterial({
+  color,
+  flatShading: true,
+  roughness: 0.85
+}));
+
 /**
  * Creates a highly stylized, more detailed medium-poly conifer pine tree with custom green shades and smoother flat-shaded silhouette.
  * @param {number} scale - Scale multiplier for the tree
@@ -18,54 +61,38 @@ export function createTree(scale = 1.0, shadeIndex = 0) {
   const treeGroup = new THREE.Group();
 
   // 1. Trunk (Brown cylinder) - tapered, 8 radial segments with a couple of branch stumps
-  const trunkMaterial = new THREE.MeshStandardMaterial({
-    color: 0x4a2e1b,
-    flatShading: true,
-    roughness: 0.9
-  });
-  // Tapered trunk: top radius 0.08, bottom 0.16, height 1.0
-  const trunkGeom = new THREE.CylinderGeometry(0.08, 0.16, 1.0, 8);
-  const trunk = new THREE.Mesh(trunkGeom, trunkMaterial);
+  const trunk = new THREE.Mesh(sharedTrunkGeom, sharedTrunkMaterial);
   trunk.position.y = 0.5;
   trunk.castShadow = true;
   trunk.receiveShadow = true;
   treeGroup.add(trunk);
 
   // Tiny branch stumps for detailed texture
-  const stumpGeom = new THREE.CylinderGeometry(0.03, 0.04, 0.25, 5);
-  const stump1 = new THREE.Mesh(stumpGeom, trunkMaterial);
+  const stump1 = new THREE.Mesh(sharedStumpGeom, sharedTrunkMaterial);
   stump1.position.set(0.1, 0.4, -0.05);
   stump1.rotation.z = Math.PI / 3;
   stump1.rotation.y = 0.5;
   treeGroup.add(stump1);
 
-  const stump2 = new THREE.Mesh(stumpGeom, trunkMaterial);
+  const stump2 = new THREE.Mesh(sharedStumpGeom, sharedTrunkMaterial);
   stump2.position.set(-0.08, 0.6, 0.08);
   stump2.rotation.z = -Math.PI / 4;
   stump2.rotation.y = -0.8;
   treeGroup.add(stump2);
 
-  // Pick a green shade deterministically
-  const leafColor = TREE_GREENS[shadeIndex % TREE_GREENS.length];
+  // Pick a shared green foliage material
+  const foliageMaterial = sharedFoliageMaterials[shadeIndex % sharedFoliageMaterials.length];
 
   // 2. Foliage (Stacked green cones with layered variations for extra medium-poly detail)
-  const foliageMaterial = new THREE.MeshStandardMaterial({
-    color: leafColor,
-    flatShading: true,
-    roughness: 0.85
-  });
-
-  // Stack 4 conifer levels for richer density
   const levels = [
-    { bottomRadius: 0.85, height: 0.9, y: 1.0 },
-    { bottomRadius: 0.70, height: 0.8, y: 1.55 },
-    { bottomRadius: 0.55, height: 0.7, y: 2.05 },
-    { bottomRadius: 0.40, height: 0.55, y: 2.45 }
+    { geom: levelGeometries[0], y: 1.0 },
+    { geom: levelGeometries[1], y: 1.55 },
+    { geom: levelGeometries[2], y: 2.05 },
+    { geom: levelGeometries[3], y: 2.45 }
   ];
 
   levels.forEach((lvl, idx) => {
-    const coneGeom = new THREE.ConeGeometry(lvl.bottomRadius, lvl.height, 8);
-    const cone = new THREE.Mesh(coneGeom, foliageMaterial);
+    const cone = new THREE.Mesh(lvl.geom, foliageMaterial);
     cone.position.y = lvl.y;
     // Rotate layers slightly differently to create a organic jagged look
     cone.rotation.y = idx * 0.45 + (shadeIndex * 0.15);
@@ -75,13 +102,6 @@ export function createTree(scale = 1.0, shadeIndex = 0) {
   });
 
   // 3. Add small hanging low-poly pine cones
-  const pineConeMaterial = new THREE.MeshStandardMaterial({
-    color: 0x3d2715,
-    flatShading: true,
-    roughness: 0.95
-  });
-  const pineConeGeom = new THREE.DodecahedronGeometry(0.07, 0);
-
   const coneOffsets = [
     { x: 0.45, y: 0.75, z: 0.2 },
     { x: -0.35, y: 1.25, z: -0.3 },
@@ -89,7 +109,7 @@ export function createTree(scale = 1.0, shadeIndex = 0) {
   ];
 
   coneOffsets.forEach(pos => {
-    const pCone = new THREE.Mesh(pineConeGeom, pineConeMaterial);
+    const pCone = new THREE.Mesh(sharedPineConeGeom, sharedPineConeMaterial);
     pCone.position.set(pos.x, pos.y, pos.z);
     pCone.scale.set(1, 1.4, 1);
     treeGroup.add(pCone);
@@ -109,28 +129,21 @@ export function createDeciduousTree(scale = 1.0, shadeIndex = 0) {
   const treeGroup = new THREE.Group();
 
   // 1. Trunk (Brown cylinder with branchings)
-  const trunkMaterial = new THREE.MeshStandardMaterial({
-    color: 0x5c3d24,
-    flatShading: true,
-    roughness: 0.9
-  });
-  const trunkGeom = new THREE.CylinderGeometry(0.1, 0.16, 1.1, 8);
-  const trunk = new THREE.Mesh(trunkGeom, trunkMaterial);
+  const trunk = new THREE.Mesh(sharedDeciduousTrunkGeom, sharedDeciduousTrunkMaterial);
   trunk.position.y = 0.55;
   trunk.castShadow = true;
   trunk.receiveShadow = true;
   treeGroup.add(trunk);
 
   // Branches
-  const branchGeom = new THREE.CylinderGeometry(0.05, 0.07, 0.55, 6);
-  const branch1 = new THREE.Mesh(branchGeom, trunkMaterial);
+  const branch1 = new THREE.Mesh(sharedBranchGeom, sharedDeciduousTrunkMaterial);
   branch1.position.set(0.18, 0.75, 0.1);
   branch1.rotation.z = Math.PI / 3.5;
   branch1.rotation.y = 0.4;
   branch1.castShadow = true;
   treeGroup.add(branch1);
 
-  const branch2 = new THREE.Mesh(branchGeom, trunkMaterial);
+  const branch2 = new THREE.Mesh(sharedBranchGeom, sharedDeciduousTrunkMaterial);
   branch2.position.set(-0.16, 0.85, -0.15);
   branch2.rotation.z = -Math.PI / 4;
   branch2.rotation.y = -0.5;
@@ -138,16 +151,9 @@ export function createDeciduousTree(scale = 1.0, shadeIndex = 0) {
   treeGroup.add(branch2);
 
   // Pick a green shade deterministically
-  const leafColor = TREE_GREENS[(shadeIndex + 1) % TREE_GREENS.length];
-  const foliageMaterial = new THREE.MeshStandardMaterial({
-    color: leafColor,
-    flatShading: true,
-    roughness: 0.85
-  });
+  const foliageMaterial = sharedFoliageMaterials[(shadeIndex + 1) % sharedFoliageMaterials.length];
 
   // Canopy made of 6 intersecting low-poly spheres (Dodecahedrons for bubbly blocky look)
-  const canopyGeom = new THREE.DodecahedronGeometry(0.44, 0);
-
   const spheres = [
     { x: 0.0, y: 1.25, z: 0.0, s: 1.3 },     // Central core
     { x: -0.28, y: 1.45, z: 0.2, s: 0.9 },   // Top-Left bubble
@@ -158,7 +164,7 @@ export function createDeciduousTree(scale = 1.0, shadeIndex = 0) {
   ];
 
   spheres.forEach(sp => {
-    const sphere = new THREE.Mesh(canopyGeom, foliageMaterial);
+    const sphere = new THREE.Mesh(sharedCanopyGeom, foliageMaterial);
     sphere.position.set(sp.x, sp.y, sp.z);
     sphere.scale.set(sp.s, sp.s, sp.s);
     sphere.rotation.set(Math.random() * Math.PI, Math.random() * Math.PI, 0);

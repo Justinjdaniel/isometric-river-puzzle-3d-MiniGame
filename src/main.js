@@ -39,8 +39,9 @@ let treeAttempts = 0;
 while (treeCount < 52 && treeAttempts < 1500) {
   treeAttempts++;
   const isLeft = Math.random() > 0.5;
-  const x = isLeft ? -10.5 + Math.random() * 7.85 : 2.65 + Math.random() * 7.85;
-  const z = -7.8 + Math.random() * 15.6;
+  // Generate coordinates directly within the valid safe land bounds ranges to reduce fail attempts
+  const x = isLeft ? -9.75 + Math.random() * 6.35 : 3.4 + Math.random() * 6.35;
+  const z = -7.05 + Math.random() * 14.1;
 
   if (isPositionSafe(x, z, 0.75)) {
     const scale = 0.8 + Math.random() * 0.45;
@@ -60,8 +61,9 @@ let shrubAttempts = 0;
 while (shrubCount < 28 && shrubAttempts < 1000) {
   shrubAttempts++;
   const isLeft = Math.random() > 0.5;
-  const x = isLeft ? -10.5 + Math.random() * 7.85 : 2.65 + Math.random() * 7.85;
-  const z = -7.8 + Math.random() * 15.6;
+  // Generate coordinates directly within the valid safe land bounds ranges to reduce fail attempts
+  const x = isLeft ? -10.05 + Math.random() * 6.95 : 3.1 + Math.random() * 6.95;
+  const z = -7.35 + Math.random() * 14.7;
 
   if (isPositionSafe(x, z, 0.45)) {
     const scale = 0.75 + Math.random() * 0.4;
@@ -494,9 +496,11 @@ window.addEventListener('touchend', (e) => {
 
 // 5c. Mouse Wheel Zoom for Orthographic Camera
 window.addEventListener('wheel', (e) => {
-  // Prevent default scroll behavior inside canvas
+  // Prevent default scroll behavior inside canvas and restrict camera zoom
   if (e.target && typeof e.target.closest === 'function' && (e.target.closest('#canvas-container') || e.target.tagName === 'CANVAS')) {
     e.preventDefault();
+  } else {
+    return;
   }
 
   camera.zoom -= e.deltaY * 0.001;
