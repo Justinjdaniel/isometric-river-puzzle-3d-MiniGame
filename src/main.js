@@ -1,6 +1,6 @@
 import * as THREE from 'three';
-import { setupScene } from './render/scene.js';
-import { createTree, createKayak, createShepherd, createFox, createSheep, createShrub, createCloud } from './render/assets.js';
+import { setupScene, isPositionSafe } from './render/scene.js';
+import { createTree, createDeciduousTree, createKayak, createShepherd, createFox, createSheep, createShrub, createCloud } from './render/assets.js';
 import { animateWater, updateAnimations, setupKeyboardControls, resetAnimations, triggerShake, triggerGameOverCues, clearGameOverCues, triggerResetGlide } from './render/animation.js';
 import { GameState } from './core/state.js';
 import { DEVELOPER_MODE } from './core/constants.js';
@@ -32,73 +32,47 @@ Object.entries(actorMeshes).forEach(([id, mesh]) => {
   scene.add(mesh);
 });
 
-// 4. Scatter Stylized Low-Poly Pine Trees on Valley Banks
-const treeCoordinates = [
-  // Left Bank (X negative, Z negative & positive)
-  { x: -5.5, z: -4.2, s: 1.1 },
-  { x: -4.2, z: -3.5, s: 0.95 },
-  { x: -6.8, z: -3.8, s: 1.2 },
-  { x: -4.8, z: -5.0, s: 0.8 },
-  { x: -7.2, z: -4.8, s: 1.15 },
-  { x: -5.0, z: 3.8, s: 1.0 },
-  { x: -6.5, z: 3.2, s: 1.1 },
-  { x: -5.8, z: 4.5, s: 0.85 },
-  { x: -7.2, z: 4.0, s: 1.3 },
-  { x: -4.4, z: 4.8, s: 0.9 },
-  // Additional dense forest left bank trees
-  { x: -3.5, z: -4.8, s: 0.7 },
-  { x: -3.2, z: 4.5, s: 0.8 },
-  { x: -6.2, z: -2.8, s: 1.0 },
+// 4. Procedurally Spawn Double Dense Stylized Low-Poly Trees (50/50 Conifer & Deciduous)
+// Spawning ~52 trees total (~26 on each bank) to double tree density safely!
+let treeCount = 0;
+let treeAttempts = 0;
+while (treeCount < 52 && treeAttempts < 400) {
+  treeAttempts++;
+  const isLeft = Math.random() > 0.5;
+  // Generate coordinates directly within the valid safe land bounds ranges to reduce fail attempts
+  const x = isLeft ? -9.75 + Math.random() * 6.35 : 3.4 + Math.random() * 6.35;
+  const z = -7.05 + Math.random() * 14.1;
 
-  // Right Bank (X positive, Z negative & positive)
-  { x: 5.5, z: -4.2, s: 1.15 },
-  { x: 4.2, z: -3.5, s: 0.85 },
-  { x: 6.8, z: -3.8, s: 1.25 },
-  { x: 4.8, z: -5.0, s: 1.0 },
-  { x: 7.2, z: -4.8, s: 0.9 },
-  { x: 5.0, z: 3.8, s: 1.1 },
-  { x: 6.5, z: 3.2, s: 0.8 },
-  { x: 5.8, z: 4.5, s: 1.2 },
-  { x: 7.2, z: 4.0, s: 0.95 },
-  { x: 4.4, z: 4.8, s: 1.05 },
-  // Additional dense forest right bank trees
-  { x: 3.5, z: -4.8, s: 0.7 },
-  { x: 3.2, z: 4.5, s: 0.8 },
-  { x: 6.2, z: -2.8, s: 1.0 }
-];
+  if (isPositionSafe(x, z, 0.75)) {
+    const scale = 0.8 + Math.random() * 0.45;
+    // 50/50 mixture
+    const isConifer = Math.random() > 0.5;
+    const tree = isConifer ? createTree(scale, treeCount) : createDeciduousTree(scale, treeCount);
+    tree.position.set(x, 0, z);
+    scene.add(tree);
+    treeCount++;
+  }
+}
 
-treeCoordinates.forEach((tc, index) => {
-  const tree = createTree(tc.s, index);
-  tree.position.set(tc.x, 0, tc.z);
-  scene.add(tree);
-});
+// 4b. Procedurally Spawn Double Dense Low-Poly Shrubs/Bushes Across Both Banks
+// Spawning ~28 shrubs total (~14 on each bank)
+let shrubCount = 0;
+let shrubAttempts = 0;
+while (shrubCount < 28 && shrubAttempts < 400) {
+  shrubAttempts++;
+  const isLeft = Math.random() > 0.5;
+  // Generate coordinates directly within the valid safe land bounds ranges to reduce fail attempts
+  const x = isLeft ? -10.05 + Math.random() * 6.95 : 3.1 + Math.random() * 6.95;
+  const z = -7.35 + Math.random() * 14.7;
 
-// 4b. Scatter Cute Low-Poly Shrubs/Bushes Across Both Banks
-const shrubCoordinates = [
-  // Left Bank
-  { x: -4.0, z: -2.2, s: 0.95 },
-  { x: -3.4, z:  2.5, s: 1.1 },
-  { x: -4.8, z:  0.8, s: 0.75 },
-  { x: -5.2, z: -3.0, s: 1.0 },
-  { x: -6.3, z: -1.8, s: 0.8 },
-  { x: -6.0, z:  3.0, s: 0.95 },
-  { x: -4.1, z: -1.0, s: 0.85 },
-
-  // Right Bank
-  { x:  4.0, z: -2.2, s: 0.95 },
-  { x:  3.4, z:  2.5, s: 1.1 },
-  { x:  4.8, z:  0.8, s: 0.75 },
-  { x:  5.2, z: -3.0, s: 1.0 },
-  { x:  6.3, z: -1.8, s: 0.8 },
-  { x:  6.0, z:  3.0, s: 0.95 },
-  { x:  4.1, z: -1.0, s: 0.85 }
-];
-
-shrubCoordinates.forEach((sc, index) => {
-  const shrub = createShrub(sc.s, index);
-  shrub.position.set(sc.x, 0, sc.z);
-  scene.add(shrub);
-});
+  if (isPositionSafe(x, z, 0.45)) {
+    const scale = 0.75 + Math.random() * 0.4;
+    const shrub = createShrub(scale, shrubCount);
+    shrub.position.set(x, 0, z);
+    scene.add(shrub);
+    shrubCount++;
+  }
+}
 
 // 4c. Spawn Floating Clouds in the air near the mountain peaks
 const clouds = [];
@@ -113,7 +87,7 @@ for (let i = 0; i < numClouds; i++) {
   const initialX = cloudMinX + ((cloudMaxX - cloudMinX) / numClouds) * i + (Math.random() - 0.5) * 2.0;
   // Position above the peaks (mountain peaks are ~6-10 units tall, so let's put clouds at Y = 5.5 to 7.8)
   const initialY = 5.5 + Math.random() * 2.3;
-  // Position slightly behind the docks/valley (Z = -4.0 to -7.5)
+  // Position slightly behind the docks/valley (Z = -3.5 to -7.5)
   const initialZ = -3.5 - Math.random() * 4.0;
 
   cloudMesh.position.set(initialX, initialY, initialZ);
@@ -141,31 +115,19 @@ let gameOverTimeout = null;
 let settingsOpen = false;
 let instructionsOpen = false;
 
-// Setup Interactive Glassmorphic UI HUD Updates
-function updateUIOverlay() {
-  const ruleResult = gameState.checkRules();
-  const boatLoc = gameState.boatLocation.toUpperCase();
-  const devPanelVisible = !!window.devPanelVisible;
+// UI Minimization State tracking
+const collapsedCards = {
+  controls: false,
+  layout: false
+};
 
-  // Format actor locations cleanly
-  const leftActors = [];
-  const boatActors = [];
-  const rightActors = [];
+let uiInitialized = false;
 
-  Object.entries(gameState.actorPositions).forEach(([actor, pos]) => {
-    const displayName = actor === 'man' ? 'Shepherd 👨‍🌾' : actor === 'fox' ? 'Fox 🦊' : actor === 'sheep1' ? 'Sheep 🐑' : 'Lamb 🐏';
-    if (pos === 'left') leftActors.push(displayName);
-    else if (pos === 'boat') boatActors.push(displayName);
-    else if (pos === 'right') rightActors.push(displayName);
-  });
-
-  // Target elements to update
+function ensureUIShell() {
+  if (uiInitialized) return;
   const appContainer = document.getElementById('app-container');
   if (!appContainer) return;
 
-  const isShepherdOnBoat = gameState.actorPositions.man === 'boat';
-
-  // Let's create a beautiful rich structured Right panel layout with popup modals for settings & instructions
   appContainer.innerHTML = `
     <!-- Top-Left Floating Title Header -->
     <div class="top-left-floating-header">
@@ -177,129 +139,66 @@ function updateUIOverlay() {
 
     <!-- Right Panel: Unified Stats, Game Controls, and Settings Card -->
     <div class="right-hud-panel">
-      <div class="glass-panel hud-card">
-        <div class="card-header-row">
+      <!-- Card 1: Game Controls -->
+      <div class="glass-panel hud-card card-collapsible" id="card-controls">
+        <div class="card-header-row clickable-header" id="header-controls">
           <h3 class="status-heading">🎮 GAME CONTROLS</h3>
-          <div style="display: flex; gap: 8px; align-items: center;">
+          <div style="display: flex; gap: 8px; align-items: center; pointer-events: auto;">
             <button class="settings-gear-btn" id="instructions-trigger-btn" title="View Mission & Rules">
               ℹ️
             </button>
             <button class="settings-gear-btn" id="settings-trigger-btn" title="Open Settings Dialog">
               ⚙️
             </button>
+            <span class="collapse-icon" id="controls-collapse-icon">▲</span>
           </div>
         </div>
 
-        <p class="status-item"><strong>Boat Docked:</strong> ${boatLoc}-Bank</p>
-        <p class="status-item"><strong>On Boat:</strong> ${boatActors.join(', ') || '<em>Empty</em>'}</p>
+        <div class="card-body-wrapper">
+          <p class="status-item"><strong>Boat Docked:</strong> <span id="val-boat-docked">LEFT-Bank</span></p>
+          <p class="status-item"><strong>On Boat:</strong> <span id="val-boat-actors"><em>Empty</em></span></p>
 
-        <div class="status-item highlight-moves">
-          <strong>Moves:</strong>
-          <span class="moves-count">${gameState.moves}</span>
-        </div>
-
-        <div class="action-buttons-container">
-          <button class="move-boat-button glass-button ${isShepherdOnBoat ? '' : 'disabled'}" id="move-boat-btn" ${isShepherdOnBoat ? '' : 'disabled'}>
-            ${isShepherdOnBoat ? '⛵ MOVE BOAT' : '🔒 SHEPHERD NEEDED'}
-          </button>
-          <button class="reset-hud-button glass-button" id="hud-reset-btn">
-            🔄 RESET
-          </button>
-        </div>
-      </div>
-
-      <div class="glass-panel hud-card">
-        <h3 class="status-heading" style="margin-bottom: 12px;">🏝️ BANK LAYOUT</h3>
-        <div class="banks-info">
-          <div class="bank-col">
-            <strong>Left Bank</strong>
-            <ul>${leftActors.map(a => `<li>${a}</li>`).join('') || '<li><em>None</em></li>'}</ul>
+          <div class="status-item highlight-moves">
+            <strong>Moves:</strong>
+            <span class="moves-count" id="val-moves-count">0</span>
           </div>
-          <div class="bank-col">
-            <strong>Right Bank</strong>
-            <ul>${rightActors.map(a => `<li>${a}</li>`).join('') || '<li><em>None</em></li>'}</ul>
+
+          <div class="action-buttons-container">
+            <button class="move-boat-button glass-button" id="move-boat-btn"></button>
+            <button class="reset-hud-button glass-button" id="hud-reset-btn">
+              🔄 RESET
+            </button>
           </div>
         </div>
       </div>
 
-      ${devPanelVisible ? `
-      <div class="glass-panel hud-card dev-controls-panel">
-        <h3 class="status-heading" style="margin-bottom: 10px; color: #ff8800;">🛠️ DEV CONTROLS</h3>
-        <p class="dev-instruction"><kbd>Spacebar</kbd> : Sail Kayak</p>
-        <p class="dev-instruction"><kbd>1</kbd> : Load/Unload Shepherd</p>
-        <p class="dev-instruction"><kbd>2</kbd> : Load/Unload Fox</p>
-        <p class="dev-instruction"><kbd>3</kbd> : Load/Unload Sheep</p>
-        <p class="dev-instruction"><kbd>4</kbd> : Load/Unload Lamb</p>
-        <div class="dev-note">Hotkeys are active while dev panel is toggled (D key).</div>
+      <!-- Card 2: Bank Layout -->
+      <div class="glass-panel hud-card card-collapsible" id="card-layout">
+        <div class="card-header-row clickable-header" id="header-layout">
+          <h3 class="status-heading">🏝️ BANK LAYOUT</h3>
+          <span class="collapse-icon" id="layout-collapse-icon" style="margin-left: auto;">▲</span>
+        </div>
+
+        <div class="card-body-wrapper">
+          <div class="banks-info">
+            <div class="bank-col">
+              <strong>Left Bank</strong>
+              <ul id="val-left-bank-list"></ul>
+            </div>
+            <div class="bank-col">
+              <strong>Right Bank</strong>
+              <ul id="val-right-bank-list"></ul>
+            </div>
+          </div>
+        </div>
       </div>
-      ` : ''}
+
+      <!-- Dev Controls Container -->
+      <div id="dev-controls-container"></div>
     </div>
 
-    <!-- Settings Dialog Modal -->
-    ${settingsOpen ? `
-    <div class="modal-overlay" id="settings-modal-overlay">
-      <div class="glass-panel terminal-modal">
-        <h2 class="modal-title" style="color: #014f86; margin-bottom: 20px;">⚙️ GAME SETTINGS</h2>
-        <div class="settings-modal-content">
-          <div class="settings-row">
-            <span class="settings-label">
-              <span id="speaker-icon">${soundManager.enabled ? '🔊' : '🔇'}</span> Sound Effects
-            </span>
-            <label class="toggle-switch">
-              <input type="checkbox" id="sound-toggle-input" ${soundManager.enabled ? 'checked' : ''}>
-              <span class="toggle-slider"></span>
-            </label>
-          </div>
-        </div>
-        <button class="reset-button" id="settings-close-btn">Close Settings</button>
-      </div>
-    </div>
-    ` : ''}
-
-    <!-- Instructions Dialog Modal -->
-    ${instructionsOpen ? `
-    <div class="modal-overlay" id="instructions-modal-overlay">
-      <div class="glass-panel terminal-modal" style="width: 480px; text-align: left;">
-        <h2 class="modal-title" style="color: #014f86; margin-bottom: 15px; text-align: center;">📜 MISSION & RULES</h2>
-        <div class="instructions-card-content">
-          <p>Help the <strong>Shepherd</strong> safely transport the hungry <strong>Fox</strong> and the two fluffy <strong>Sheep (Sheep and Lamb)</strong> across the river to the Right Bank.</p>
-          <hr class="hud-divider" />
-          <p><strong>Safety Rules:</strong></p>
-          <ul class="rules-list">
-            <li>The Shepherd must navigate the boat.</li>
-            <li>The kayak can only hold <strong>at most 2 passengers</strong>.</li>
-            <li>If left alone on a bank without the shepherd:
-              <ul>
-                <li>The Fox will eat the Sheep.</li>
-                <li>The Fox will eat the Lamb.</li>
-              </ul>
-            </li>
-          </ul>
-          <div class="hud-rules-warning" style="margin-top: 15px;">
-            ⚠️ <strong>Warning:</strong> Left-alone combos like (Fox + Sheep) or (Fox + Lamb) trigger a GAME OVER!
-          </div>
-        </div>
-        <div style="text-align: center; margin-top: 25px;">
-          <button class="reset-button" id="instructions-close-btn">Close Instructions</button>
-        </div>
-      </div>
-    </div>
-    ` : ''}
-
-    <!-- Game Over / Victory Modals -->
-    ${(ruleResult !== 'playing' && !gameLoopLocked) ? `
-    <div class="modal-overlay">
-      <div class="glass-panel terminal-modal ${ruleResult}">
-        <h2 class="modal-title">${ruleResult === 'victory' ? '🎉 VICTORY!' : '⚠️ GAME OVER!'}</h2>
-        <p class="modal-text">
-          ${ruleResult === 'victory'
-            ? 'Splendid job! You successfully guided the Shepherd, Fox, and Sheep safely to the Right Bank!'
-            : 'Oh no! The shepherd left the hungry fox alone with the fluffy sheep on a bank, and the fox ate the sheep!'}
-        </p>
-        <button class="reset-button" id="reset-game-btn">${ruleResult === 'victory' ? 'Play Again' : 'Try Again'}</button>
-      </div>
-    </div>
-    ` : ''}
+    <!-- Modals Container -->
+    <div id="modal-container"></div>
 
     <footer class="glass-panel hud-footer">
       <div class="hud-footer-content">
@@ -308,24 +207,47 @@ function updateUIOverlay() {
     </footer>
   `;
 
-  // Attach event listener to modal reset button if it exists
-  const resetBtn = document.getElementById('reset-game-btn');
-  if (resetBtn) {
-    resetBtn.addEventListener('click', () => {
-      soundManager.init();
-      if (gameOverTimeout) {
-        clearTimeout(gameOverTimeout);
-        gameOverTimeout = null;
-      }
-      gameLoopLocked = false;
-      gameState.reset();
-      triggerResetGlide();
-      soundManager.playToggleOn();
+  // Attach card collapse listeners exactly once
+  const headerControls = document.getElementById('header-controls');
+  if (headerControls) {
+    headerControls.addEventListener('click', (e) => {
+      if (e.target.closest('button')) return;
+      collapsedCards.controls = !collapsedCards.controls;
       updateUIOverlay();
     });
   }
 
-  // Attach event listener to HUD standard reset button
+  const headerLayout = document.getElementById('header-layout');
+  if (headerLayout) {
+    headerLayout.addEventListener('click', () => {
+      collapsedCards.layout = !collapsedCards.layout;
+      updateUIOverlay();
+    });
+  }
+
+  // Attach Settings Toggle button listener exactly once
+  const settingsBtn = document.getElementById('settings-trigger-btn');
+  if (settingsBtn) {
+    settingsBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      soundManager.init();
+      settingsOpen = true;
+      updateUIOverlay();
+    });
+  }
+
+  // Attach Instructions Toggle button listener exactly once
+  const instructionsBtn = document.getElementById('instructions-trigger-btn');
+  if (instructionsBtn) {
+    instructionsBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      soundManager.init();
+      instructionsOpen = true;
+      updateUIOverlay();
+    });
+  }
+
+  // Attach HUD standard reset button listener exactly once
   const hudResetBtn = document.getElementById('hud-reset-btn');
   if (hudResetBtn) {
     hudResetBtn.addEventListener('click', () => {
@@ -342,62 +264,234 @@ function updateUIOverlay() {
     });
   }
 
-  // Attach event listener to move boat button
+  // Attach move boat button listener exactly once
   const moveBoatBtn = document.getElementById('move-boat-btn');
-  if (moveBoatBtn && isShepherdOnBoat) {
+  if (moveBoatBtn) {
     moveBoatBtn.addEventListener('click', () => {
-      handleBoatMove();
-    });
-  }
-
-  // Attach Settings Toggle button listener
-  const settingsBtn = document.getElementById('settings-trigger-btn');
-  if (settingsBtn) {
-    settingsBtn.addEventListener('click', () => {
-      soundManager.init();
-      settingsOpen = true;
-      updateUIOverlay();
-    });
-  }
-
-  // Attach Settings Close button listener
-  const settingsCloseBtn = document.getElementById('settings-close-btn');
-  if (settingsCloseBtn) {
-    settingsCloseBtn.addEventListener('click', () => {
-      settingsOpen = false;
-      updateUIOverlay();
-    });
-  }
-
-  // Attach Instructions Toggle button listener
-  const instructionsBtn = document.getElementById('instructions-trigger-btn');
-  if (instructionsBtn) {
-    instructionsBtn.addEventListener('click', () => {
-      soundManager.init();
-      instructionsOpen = true;
-      updateUIOverlay();
-    });
-  }
-
-  // Attach Instructions Close button listener
-  const instructionsCloseBtn = document.getElementById('instructions-close-btn');
-  if (instructionsCloseBtn) {
-    instructionsCloseBtn.addEventListener('click', () => {
-      instructionsOpen = false;
-      updateUIOverlay();
-    });
-  }
-
-  // Attach Settings Toggle switch listener
-  const soundToggle = document.getElementById('sound-toggle-input');
-  if (soundToggle) {
-    soundToggle.addEventListener('change', () => {
-      soundManager.toggleSound();
-      const speaker = document.getElementById('speaker-icon');
-      if (speaker) {
-        speaker.textContent = soundManager.enabled ? '🔊' : '🔇';
+      if (gameState.actorPositions.man === 'boat') {
+        handleBoatMove();
       }
     });
+  }
+
+  uiInitialized = true;
+}
+
+// Setup Interactive Glassmorphic UI HUD Updates - Targeted element updates to avoid performance lags
+function updateUIOverlay() {
+  ensureUIShell();
+
+  const ruleResult = gameState.checkRules();
+  const boatLoc = gameState.boatLocation.toUpperCase();
+  const devPanelVisible = !!window.devPanelVisible;
+
+  // Format actor locations cleanly
+  const leftActors = [];
+  const boatActors = [];
+  const rightActors = [];
+
+  Object.entries(gameState.actorPositions).forEach(([actor, pos]) => {
+    const displayName = actor === 'man' ? 'Shepherd 👨‍🌾' : actor === 'fox' ? 'Fox 🦊' : actor === 'sheep1' ? 'Sheep 🐑' : 'Lamb 🐏';
+    if (pos === 'left') leftActors.push(displayName);
+    else if (pos === 'boat') boatActors.push(displayName);
+    else if (pos === 'right') rightActors.push(displayName);
+  });
+
+  const isShepherdOnBoat = gameState.actorPositions.man === 'boat';
+
+  // 1. Update dynamic text and state contents in Game Controls card
+  const elBoatDocked = document.getElementById('val-boat-docked');
+  if (elBoatDocked) {
+    elBoatDocked.textContent = `${boatLoc}-Bank`;
+  }
+
+  const elBoatActors = document.getElementById('val-boat-actors');
+  if (elBoatActors) {
+    elBoatActors.innerHTML = boatActors.join(', ') || '<em>Empty</em>';
+  }
+
+  const elMovesCount = document.getElementById('val-moves-count');
+  if (elMovesCount) {
+    elMovesCount.textContent = gameState.moves;
+  }
+
+  const elMoveBoatBtn = document.getElementById('move-boat-btn');
+  if (elMoveBoatBtn) {
+    elMoveBoatBtn.className = `move-boat-button glass-button ${isShepherdOnBoat ? '' : 'disabled'}`;
+    elMoveBoatBtn.textContent = isShepherdOnBoat ? '⛵ MOVE BOAT' : '🔒 SHEPHERD NEEDED';
+    elMoveBoatBtn.disabled = !isShepherdOnBoat;
+  }
+
+  // 2. Update Left and Right banks list in Bank Layout card
+  const elLeftList = document.getElementById('val-left-bank-list');
+  if (elLeftList) {
+    elLeftList.innerHTML = leftActors.map(a => `<li>${a}</li>`).join('') || '<li><em>None</em></li>';
+  }
+
+  const elRightList = document.getElementById('val-right-bank-list');
+  if (elRightList) {
+    elRightList.innerHTML = rightActors.map(a => `<li>${a}</li>`).join('') || '<li><em>None</em></li>';
+  }
+
+  // 3. Update collapsible classes and icons dynamically
+  const cardControls = document.getElementById('card-controls');
+  if (cardControls) {
+    if (collapsedCards.controls) cardControls.classList.add('collapsed');
+    else cardControls.classList.remove('collapsed');
+  }
+
+  const iconControls = document.getElementById('controls-collapse-icon');
+  if (iconControls) {
+    iconControls.textContent = collapsedCards.controls ? '▼' : '▲';
+  }
+
+  const cardLayout = document.getElementById('card-layout');
+  if (cardLayout) {
+    if (collapsedCards.layout) cardLayout.classList.add('collapsed');
+    else cardLayout.classList.remove('collapsed');
+  }
+
+  const iconLayout = document.getElementById('layout-collapse-icon');
+  if (iconLayout) {
+    iconLayout.textContent = collapsedCards.layout ? '▼' : '▲';
+  }
+
+  // 4. Update Developer Controls panel visibility
+  const elDevControls = document.getElementById('dev-controls-container');
+  if (elDevControls) {
+    if (devPanelVisible) {
+      elDevControls.innerHTML = `
+        <div class="glass-panel hud-card dev-controls-panel">
+          <h3 class="status-heading" style="margin-bottom: 10px; color: #ff8800;">🛠️ DEV CONTROLS</h3>
+          <p class="dev-instruction"><kbd>Spacebar</kbd> : Sail Kayak</p>
+          <p class="dev-instruction"><kbd>1</kbd> : Load/Unload Shepherd</p>
+          <p class="dev-instruction"><kbd>2</kbd> : Load/Unload Fox</p>
+          <p class="dev-instruction"><kbd>3</kbd> : Load/Unload Sheep</p>
+          <p class="dev-instruction"><kbd>4</kbd> : Load/Unload Lamb</p>
+          <div class="dev-note">Hotkeys are active while dev panel is toggled (D key).</div>
+        </div>
+      `;
+    } else {
+      elDevControls.innerHTML = '';
+    }
+  }
+
+  // 5. Render active Modals inside the modal container
+  const elModalContainer = document.getElementById('modal-container');
+  if (elModalContainer) {
+    let modalHTML = '';
+    if (settingsOpen) {
+      modalHTML = `
+        <div class="modal-overlay" id="settings-modal-overlay">
+          <div class="glass-panel terminal-modal">
+            <h2 class="modal-title" style="color: #014f86; margin-bottom: 20px;">⚙️ GAME SETTINGS</h2>
+            <div class="settings-modal-content">
+              <div class="settings-row">
+                <span class="settings-label">
+                  <span id="speaker-icon">${soundManager.enabled ? '🔊' : '🔇'}</span> Sound Effects
+                </span>
+                <label class="toggle-switch">
+                  <input type="checkbox" id="sound-toggle-input" ${soundManager.enabled ? 'checked' : ''}>
+                  <span class="toggle-slider"></span>
+                </label>
+              </div>
+            </div>
+            <button class="reset-button" id="settings-close-btn">Close Settings</button>
+          </div>
+        </div>
+      `;
+    } else if (instructionsOpen) {
+      modalHTML = `
+        <div class="modal-overlay" id="instructions-modal-overlay">
+          <div class="glass-panel terminal-modal" style="width: 480px; text-align: left;">
+            <h2 class="modal-title" style="color: #014f86; margin-bottom: 15px; text-align: center;">📜 MISSION & RULES</h2>
+            <div class="instructions-card-content">
+              <p>Help the <strong>Shepherd</strong> safely transport the hungry <strong>Fox</strong> and the two fluffy <strong>Sheep (Sheep and Lamb)</strong> across the river to the Right Bank.</p>
+              <hr class="hud-divider" />
+              <p><strong>Safety Rules:</strong></p>
+              <ul class="rules-list">
+                <li>The Shepherd must navigate the boat.</li>
+                <li>The kayak can only hold <strong>at most 2 passengers</strong>.</li>
+                <li>If left alone on a bank without the shepherd:
+                  <ul>
+                    <li>The Fox will eat the Sheep.</li>
+                    <li>The Fox will eat the Lamb.</li>
+                  </ul>
+                  </li>
+              </ul>
+              <div class="hud-rules-warning" style="margin-top: 15px;">
+                ⚠️ <strong>Warning:</strong> Left-alone combos like (Fox + Sheep) or (Fox + Lamb) trigger a GAME OVER!
+              </div>
+            </div>
+            <div style="text-align: center; margin-top: 25px;">
+              <button class="reset-button" id="instructions-close-btn">Close Instructions</button>
+            </div>
+          </div>
+        </div>
+      `;
+    } else if (ruleResult !== 'playing' && !gameLoopLocked) {
+      modalHTML = `
+        <div class="modal-overlay">
+          <div class="glass-panel terminal-modal ${ruleResult}">
+            <h2 class="modal-title">${ruleResult === 'victory' ? '🎉 VICTORY!' : '⚠️ GAME OVER!'}</h2>
+            <p class="modal-text">
+              ${ruleResult === 'victory'
+                ? 'Splendid job! You successfully guided the Shepherd, Fox, and Sheep safely to the Right Bank!'
+                : 'Oh no! The shepherd left the hungry fox alone with the fluffy sheep on a bank, and the fox ate the sheep!'}
+            </p>
+            <button class="reset-button" id="reset-game-btn">${ruleResult === 'victory' ? 'Play Again' : 'Try Again'}</button>
+          </div>
+        </div>
+      `;
+    }
+
+    elModalContainer.innerHTML = modalHTML;
+
+    // Attach listeners dynamically to the elements inside the active modal
+    if (settingsOpen) {
+      const settingsCloseBtn = document.getElementById('settings-close-btn');
+      if (settingsCloseBtn) {
+        settingsCloseBtn.addEventListener('click', () => {
+          settingsOpen = false;
+          updateUIOverlay();
+        });
+      }
+
+      const soundToggle = document.getElementById('sound-toggle-input');
+      if (soundToggle) {
+        soundToggle.addEventListener('change', () => {
+          soundManager.toggleSound();
+          const speaker = document.getElementById('speaker-icon');
+          if (speaker) {
+            speaker.textContent = soundManager.enabled ? '🔊' : '🔇';
+          }
+        });
+      }
+    } else if (instructionsOpen) {
+      const instructionsCloseBtn = document.getElementById('instructions-close-btn');
+      if (instructionsCloseBtn) {
+        instructionsCloseBtn.addEventListener('click', () => {
+          instructionsOpen = false;
+          updateUIOverlay();
+        });
+      }
+    } else if (ruleResult !== 'playing' && !gameLoopLocked) {
+      const resetBtn = document.getElementById('reset-game-btn');
+      if (resetBtn) {
+        resetBtn.addEventListener('click', () => {
+          soundManager.init();
+          if (gameOverTimeout) {
+            clearTimeout(gameOverTimeout);
+            gameOverTimeout = null;
+          }
+          gameLoopLocked = false;
+          gameState.reset();
+          triggerResetGlide();
+          soundManager.playToggleOn();
+          updateUIOverlay();
+        });
+      }
+    }
   }
 }
 
@@ -485,14 +579,14 @@ window.addEventListener('touchend', (e) => {
 
 // 5c. Mouse Wheel Zoom for Orthographic Camera
 window.addEventListener('wheel', (e) => {
-  // Prevent default scroll behavior inside canvas
+  // Prevent default scroll behavior inside canvas and restrict camera zoom
   if (e.target && typeof e.target.closest === 'function' && (e.target.closest('#canvas-container') || e.target.tagName === 'CANVAS')) {
     e.preventDefault();
+  } else {
+    return;
   }
 
-  // Adjust camera.zoom based on event.deltaY
   camera.zoom -= e.deltaY * 0.001;
-  // Clamp camera.zoom between 0.6x and 1.8x
   camera.zoom = Math.max(0.6, Math.min(1.8, camera.zoom));
   camera.updateProjectionMatrix();
 }, { passive: false });
@@ -510,8 +604,10 @@ function handleActorClick(actorId) {
 
   if (success) {
     // Play distinctive character click and load/unload sound
-    if (actorId === 'sheep1' || actorId === 'sheep2') {
-      soundManager.playSheepBaa();
+    if (actorId === 'sheep1') {
+      soundManager.playSheepBaa(false); // adult
+    } else if (actorId === 'sheep2') {
+      soundManager.playSheepBaa(true);  // lamb (baby)
     } else if (actorId === 'fox') {
       soundManager.playFoxRustle();
     } else if (actorId === 'man') {
@@ -519,25 +615,23 @@ function handleActorClick(actorId) {
     } else {
       soundManager.playHop();
     }
-    // Refresh UI Overlay and check rules
     updateUIOverlay();
     checkGameLoopRules();
   } else {
-    // Subtle visual rotational wobble/shake feedback and sound buzz
     triggerShake(actorId);
     soundManager.playBuzzer();
   }
 }
 
 // Boat move logic (State Machine binding)
+// Boat move logic (State Machine binding)
 function handleBoatMove() {
   if (gameState.moveBoat()) {
-    soundManager.playSplash(); // Play water sloshing with paddle wood creaking
+    soundManager.playSplash();
     updateUIOverlay();
     checkGameLoopRules();
   } else {
-    // If Shepherd is not on board, shake the kayak
-    triggerShake('man'); // Shake shepherd to show they are required, or shake the boat?
+    triggerShake('man');
     soundManager.playBuzzer();
   }
 }
@@ -548,16 +642,15 @@ function checkGameLoopRules() {
   if (result === 'playing') return;
 
   if (result === 'victory') {
-    soundManager.playVictory(); // Play triumphant arpeggio scale
-    // Instant display of victory modal as there is no sad loss event
+    soundManager.playVictory();
     updateUIOverlay();
   } else if (result === 'game_over_fox_ate_sheep') {
-    soundManager.playGameOver(); // Play comic sliding cartoon crash fail
+    soundManager.playGameOver();
     gameLoopLocked = true;
 
-    // Find which sheep was left alone with the fox on the same bank (without shepherd)
+    // Find which sheep was left alone with the fox on the same bank
     const banks = ['left', 'right'];
-    let eatenSheep = 'sheep1'; // fallback
+    let eatenSheep = 'sheep1';
     for (const bank of banks) {
       const manPresent = gameState._isPresentOnBank('man', bank);
       const foxPresent = gameState._isPresentOnBank('fox', bank);
@@ -575,10 +668,8 @@ function checkGameLoopRules() {
       }
     }
 
-    // Trigger visual game over cues
     triggerGameOverCues(eatenSheep);
 
-    // Delay game over modal by 1.5 seconds
     gameOverTimeout = setTimeout(() => {
       gameLoopLocked = false;
       gameOverTimeout = null;
@@ -608,18 +699,15 @@ function animate() {
   const wrapRight = 12.0;
   clouds.forEach(cloud => {
     cloud.position.x += cloud.userData.driftSpeed * delta;
-    // When a cloud drifts out of bounds (past wrapRight), wrap it back to wrapLeft
     if (cloud.position.x > wrapRight) {
       cloud.position.x = wrapLeft;
-      // Slightly randomize its Y and Z again on wrap-around for endless variety
       cloud.userData.baseY = 5.5 + Math.random() * 2.3;
       cloud.position.z = -3.5 - Math.random() * 4.0;
     }
-    // Subtle additional bobbing along the Y axis (stable and frame-rate independent)
     cloud.position.y = cloud.userData.baseY + Math.sin(elapsedTime * 0.8 + cloud.position.x) * 0.1;
   });
 
-  // 3. Update boat/actors smooth transitions and bobbing
+  // 3. Update boat/actors smooth transitions, bobbing, and kayak paddle rowing animation
   updateAnimations(delta, elapsedTime, boatMesh, actorMeshes, gameState);
 
   // 4. Render frame
