@@ -141,8 +141,11 @@ function ensureUIShell() {
     <div class="right-hud-panel">
       <!-- Card 1: Game Controls -->
       <div class="glass-panel hud-card card-collapsible" id="card-controls">
-        <div class="card-header-row clickable-header" id="header-controls" tabindex="0" role="button" aria-expanded="true" aria-controls="card-controls-body" aria-label="Game Controls Card, press Enter or Space to toggle collapse">
-          <h3 class="status-heading">🎮 GAME CONTROLS</h3>
+        <div class="card-header-row" id="header-controls">
+          <button class="card-toggle-button" id="controls-collapse-btn" aria-expanded="true" aria-controls="card-controls-body" aria-label="Toggle Game Controls card content">
+            <h3 class="status-heading" style="margin: 0;">🎮 GAME CONTROLS</h3>
+            <span class="collapse-icon" id="controls-collapse-icon" aria-hidden="true">▲</span>
+          </button>
           <div style="display: flex; gap: 8px; align-items: center; pointer-events: auto;">
             <button class="settings-gear-btn" id="instructions-trigger-btn" title="View Mission & Rules" aria-label="View Mission and Rules">
               ℹ️
@@ -150,7 +153,6 @@ function ensureUIShell() {
             <button class="settings-gear-btn" id="settings-trigger-btn" title="Open Settings Dialog" aria-label="Open Settings Dialog">
               ⚙️
             </button>
-            <span class="collapse-icon" id="controls-collapse-icon" aria-hidden="true">▲</span>
           </div>
         </div>
 
@@ -174,9 +176,11 @@ function ensureUIShell() {
 
       <!-- Card 2: Bank Layout -->
       <div class="glass-panel hud-card card-collapsible" id="card-layout">
-        <div class="card-header-row clickable-header" id="header-layout" tabindex="0" role="button" aria-expanded="true" aria-controls="card-layout-body" aria-label="Bank Layout Card, press Enter or Space to toggle collapse">
-          <h3 class="status-heading">🏝️ BANK LAYOUT</h3>
-          <span class="collapse-icon" id="layout-collapse-icon" style="margin-left: auto;" aria-hidden="true">▲</span>
+        <div class="card-header-row" id="header-layout">
+          <button class="card-toggle-button" id="layout-collapse-btn" aria-expanded="true" aria-controls="card-layout-body" aria-label="Toggle Bank Layout card content" style="width: 100%; justify-content: space-between;">
+            <h3 class="status-heading" style="margin: 0;">🏝️ BANK LAYOUT</h3>
+            <span class="collapse-icon" id="layout-collapse-icon" aria-hidden="true">▲</span>
+          </button>
         </div>
 
         <div class="card-body-wrapper" id="card-layout-body">
@@ -208,34 +212,19 @@ function ensureUIShell() {
   `;
 
   // Attach card collapse listeners exactly once
-  const headerControls = document.getElementById('header-controls');
-  if (headerControls) {
-    const toggleControls = (e) => {
-      if (e.target.closest('button')) return;
+  const controlsCollapseBtn = document.getElementById('controls-collapse-btn');
+  if (controlsCollapseBtn) {
+    controlsCollapseBtn.addEventListener('click', () => {
       collapsedCards.controls = !collapsedCards.controls;
       updateUIOverlay();
-    };
-    headerControls.addEventListener('click', toggleControls);
-    headerControls.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter' || e.key === ' ') {
-        e.preventDefault();
-        toggleControls(e);
-      }
     });
   }
 
-  const headerLayout = document.getElementById('header-layout');
-  if (headerLayout) {
-    const toggleLayout = () => {
+  const layoutCollapseBtn = document.getElementById('layout-collapse-btn');
+  if (layoutCollapseBtn) {
+    layoutCollapseBtn.addEventListener('click', () => {
       collapsedCards.layout = !collapsedCards.layout;
       updateUIOverlay();
-    };
-    headerLayout.addEventListener('click', toggleLayout);
-    headerLayout.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter' || e.key === ' ') {
-        e.preventDefault();
-        toggleLayout();
-      }
     });
   }
 
@@ -349,14 +338,14 @@ function updateUIOverlay() {
 
   // 3. Update collapsible classes and icons dynamically
   const cardControls = document.getElementById('card-controls');
-  const hControls = document.getElementById('header-controls');
+  const btnControls = document.getElementById('controls-collapse-btn');
   if (cardControls) {
     if (collapsedCards.controls) {
       cardControls.classList.add('collapsed');
-      if (hControls) hControls.setAttribute('aria-expanded', 'false');
+      if (btnControls) btnControls.setAttribute('aria-expanded', 'false');
     } else {
       cardControls.classList.remove('collapsed');
-      if (hControls) hControls.setAttribute('aria-expanded', 'true');
+      if (btnControls) btnControls.setAttribute('aria-expanded', 'true');
     }
   }
 
@@ -366,14 +355,14 @@ function updateUIOverlay() {
   }
 
   const cardLayout = document.getElementById('card-layout');
-  const hLayout = document.getElementById('header-layout');
+  const btnLayout = document.getElementById('layout-collapse-btn');
   if (cardLayout) {
     if (collapsedCards.layout) {
       cardLayout.classList.add('collapsed');
-      if (hLayout) hLayout.setAttribute('aria-expanded', 'false');
+      if (btnLayout) btnLayout.setAttribute('aria-expanded', 'false');
     } else {
       cardLayout.classList.remove('collapsed');
-      if (hLayout) hLayout.setAttribute('aria-expanded', 'true');
+      if (btnLayout) btnLayout.setAttribute('aria-expanded', 'true');
     }
   }
 

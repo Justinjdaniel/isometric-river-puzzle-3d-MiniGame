@@ -17,10 +17,28 @@ html, body {
   outline-offset: 3px;
 }
 
-.clickable-header:focus-visible {
+.card-toggle-button {
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  text-align: left;
+  font-family: inherit;
+  color: inherit;
+}
+
+.card-toggle-button:focus-visible {
   outline: 3px solid #2a6f97;
   outline-offset: 4px;
   border-radius: 8px;
+}
+
+.card-toggle-button:hover .status-heading {
+  color: #2a6f97;
 }
 
 .glass-button:focus-visible,
@@ -520,15 +538,6 @@ input:checked + .toggle-slider:before {
 }
 
 /* Collapsible HUD Cards with Smooth CSS transition */
-.clickable-header {
-  cursor: pointer;
-  user-select: none;
-}
-
-.clickable-header:hover .status-heading {
-  color: #2a6f97;
-}
-
 .collapse-icon {
   font-size: 0.8rem;
   color: #014f86;
