@@ -49,7 +49,8 @@ export class GameState {
       return false;
     }
 
-    if (!this.actorPositions.hasOwnProperty(actor)) {
+    // SECURITY: Direct, zero-allocation logical check to prevent both Prototype Pollution and memory allocation overhead.
+    if (actor !== 'man' && actor !== 'fox' && actor !== 'sheep1' && actor !== 'sheep2') {
       console.warn(`[GameState] loadToBoat failed: Invalid actor "${actor}"`);
       return false;
     }
@@ -90,7 +91,8 @@ export class GameState {
       return false;
     }
 
-    if (!this.actorPositions.hasOwnProperty(actor)) {
+    // SECURITY: Direct, zero-allocation logical check to prevent both Prototype Pollution and memory allocation overhead.
+    if (actor !== 'man' && actor !== 'fox' && actor !== 'sheep1' && actor !== 'sheep2') {
       console.warn(`[GameState] unloadFromBoat failed: Invalid actor "${actor}"`);
       return false;
     }

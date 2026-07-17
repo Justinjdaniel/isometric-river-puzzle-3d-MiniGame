@@ -245,4 +245,16 @@ describe('GameState Class Unit Tests', () => {
     expect(game.loadToBoat('fox')).toBe(false);
     expect(game.unloadFromBoat('man')).toBe(false);
   });
+
+  test('SECURITY: Invalid or prototype actors are completely rejected', () => {
+    // Standard invalid actor
+    expect(game.loadToBoat('tiger')).toBe(false);
+    expect(game.unloadFromBoat('tiger')).toBe(false);
+
+    // Prototype pollution payload attempt
+    expect(game.loadToBoat('__proto__')).toBe(false);
+    expect(game.unloadFromBoat('__proto__')).toBe(false);
+    expect(game.loadToBoat('toString')).toBe(false);
+    expect(game.unloadFromBoat('toString')).toBe(false);
+  });
 });
