@@ -11,6 +11,26 @@ html, body {
   color: #ffffff;
 }
 
+/* Keyboard accessibility focus states */
+:focus-visible {
+  outline: 3px solid #014f86;
+  outline-offset: 3px;
+}
+
+.clickable-header:focus-visible {
+  outline: 3px solid #2a6f97;
+  outline-offset: 4px;
+  border-radius: 8px;
+}
+
+.glass-button:focus-visible,
+.settings-gear-btn:focus-visible,
+.reset-button:focus-visible,
+.toggle-switch input:focus-visible + .toggle-slider {
+  outline: 3px solid #2a6f97;
+  outline-offset: 2px;
+}
+
 #canvas-container {
   position: absolute;
   top: 0;
