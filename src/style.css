@@ -498,3 +498,43 @@ input:checked + .toggle-slider:before {
   padding: 1px 8px;
   border-radius: 4px;
 }
+
+/* Collapsible HUD Cards with Smooth CSS transition */
+.clickable-header {
+  cursor: pointer;
+  user-select: none;
+}
+
+.clickable-header:hover .status-heading {
+  color: #2a6f97;
+}
+
+.collapse-icon {
+  font-size: 0.8rem;
+  color: #014f86;
+  transition: transform 0.25s ease;
+  user-select: none;
+}
+
+.card-collapsible {
+  transition: padding-bottom 0.3s ease, box-shadow 0.25s ease, background 0.25s ease;
+}
+
+.card-body-wrapper {
+  max-height: 400px; /* large enough to contain the content */
+  opacity: 1;
+  overflow: hidden;
+  transition: max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.25s ease, margin-top 0.3s ease;
+  margin-top: 12px;
+}
+
+.card-collapsible.collapsed {
+  padding-bottom: 12px;
+}
+
+.card-collapsible.collapsed .card-body-wrapper {
+  max-height: 0 !important;
+  opacity: 0 !important;
+  margin-top: 0 !important;
+  pointer-events: none;
+}

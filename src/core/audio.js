@@ -265,7 +265,7 @@ class SoundManager {
     noiseNode.start(now);
     noiseNode.stop(now + duration);
 
-    // Wooden paddle creak sound (short modulated low-pitch triangle wave block)
+    // Wooden paddle creak sound
     const creakOsc = this.ctx.createOscillator();
     const creakGain = this.ctx.createGain();
     creakOsc.connect(creakGain);
@@ -283,43 +283,65 @@ class SoundManager {
     creakOsc.stop(now + 0.38);
   }
 
-  // Play a sheep Baa sound using square waves with FM/pitch sweep modulation
-  playSheepBaa() {
+  // Play a beautiful, sweet, organic sheep vocal sound
+  // Softened harshness with triangle/sine detuned oscillators, a pitch-drop envelope, and a lowpass filter
+  // isLamb: baby lamb is sweet and distinctively higher-pitched than the adult sheep!
+  playSheepBaa(isLamb = false) {
     this.init();
     if (!this.enabled || !this.ctx) return;
 
     const now = this.ctx.currentTime;
 
-    // Main oscillator - square or triangle for that classic retro low-poly feel
+    // Base pitch: 145Hz for adult sheep, 275Hz for cute baby lamb
+    const basePitch = isLamb ? 275 : 145;
+
+    // Primary vocal hum oscillator (Triangle wave)
     const osc = this.ctx.createOscillator();
-    osc.type = 'sawtooth';
-    osc.frequency.setValueAtTime(160, now);
-    // Mimic the pitch variation of a sheep's "baa-aa-aa" (modulated sweep down)
-    osc.frequency.linearRampToValueAtTime(145, now + 0.15);
-    osc.frequency.linearRampToValueAtTime(135, now + 0.45);
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(basePitch, now);
+    // Pitch drop envelope: start higher, sweep down slightly, then drop on fade-out
+    osc.frequency.linearRampToValueAtTime(basePitch * 1.05, now + 0.1);
+    osc.frequency.linearRampToValueAtTime(basePitch * 0.9, now + 0.35);
+    osc.frequency.linearRampToValueAtTime(basePitch * 0.75, now + 0.55);
 
-    // Bandpass filter to capture the sheep vocal nasal tract resonance
+    // Secondary vocal detune oscillator (Sine wave)
+    const osc2 = this.ctx.createOscillator();
+    osc2.type = 'sine';
+    osc2.frequency.setValueAtTime(basePitch * 1.01 + 2, now);
+    osc2.frequency.linearRampToValueAtTime(basePitch * 1.01 * 0.9, now + 0.35);
+    osc2.frequency.linearRampToValueAtTime(basePitch * 1.01 * 0.75, now + 0.55);
+
+    // Lowpass filter to soften any high-frequency harshness
     const filter = this.ctx.createBiquadFilter();
-    filter.type = 'bandpass';
-    filter.frequency.setValueAtTime(750, now);
-    filter.Q.setValueAtTime(3.0, now);
+    filter.type = 'lowpass';
+    // Adult lowpass filter frequency 650Hz, lamb 1100Hz (allows higher vocal harmonics)
+    const filterFreq = isLamb ? 1100 : 650;
+    filter.frequency.setValueAtTime(filterFreq, now);
+    filter.frequency.exponentialRampToValueAtTime(filterFreq * 0.7, now + 0.55);
 
-    // Gain envelope
-    const gain = this.ctx.createGain();
-    gain.gain.setValueAtTime(0.0, now);
-    gain.gain.linearRampToValueAtTime(0.14, now + 0.08);
-    // Vibrato effect on volume for "baa-aa-aa"
-    gain.gain.setValueAtTime(0.12, now + 0.18);
-    gain.gain.linearRampToValueAtTime(0.08, now + 0.25);
-    gain.gain.setValueAtTime(0.10, now + 0.32);
-    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.55);
+    // Gain envelope with rapid rise, vibrato/wobble for "baa-aa-aa", and exponential decay
+    const gainNode = this.ctx.createGain();
+    gainNode.gain.setValueAtTime(0.0, now);
+    gainNode.gain.linearRampToValueAtTime(0.18, now + 0.06);
+
+    // "baa-aa-aa" amplitude vibrato
+    const vibTime = now + 0.06;
+    gainNode.gain.setValueAtTime(0.18, vibTime);
+    gainNode.gain.linearRampToValueAtTime(0.11, vibTime + 0.1);
+    gainNode.gain.linearRampToValueAtTime(0.17, vibTime + 0.18);
+    gainNode.gain.linearRampToValueAtTime(0.10, vibTime + 0.28);
+    gainNode.gain.linearRampToValueAtTime(0.16, vibTime + 0.36);
+    gainNode.gain.exponentialRampToValueAtTime(0.001, now + 0.58);
 
     osc.connect(filter);
-    filter.connect(gain);
-    gain.connect(this.masterGain);
+    osc2.connect(filter);
+    filter.connect(gainNode);
+    gainNode.connect(this.masterGain);
 
     osc.start(now);
-    osc.stop(now + 0.55);
+    osc2.start(now);
+    osc.stop(now + 0.58);
+    osc2.stop(now + 0.58);
   }
 
   // Play a quick playful rustle sound for the Fox

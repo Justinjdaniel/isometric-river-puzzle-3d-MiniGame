@@ -2,7 +2,6 @@ import * as THREE from 'three';
 import { BOUNDS, POSITIONS, BOAT_SEATS, getBankPosition, DEVELOPER_MODE, SPEED } from '../core/constants.js';
 
 // Track animation states for actors
-// Each actor can have: { startPos: Vector3, startRotY: number, progress: number, animating: boolean, prevLocation: string, shakeTime: number, isGliding: boolean }
 const actorAnims = {
   man: { startPos: new THREE.Vector3(), startRotY: 0, progress: 1.0, animating: false, prevLocation: 'left', shakeTime: 0, isGliding: false },
   fox: { startPos: new THREE.Vector3(), startRotY: 0, progress: 1.0, animating: false, prevLocation: 'left', shakeTime: 0, isGliding: false },
@@ -53,9 +52,8 @@ export function triggerResetGlide() {
 
 /**
  * CPU-based water plane vertex wave displacement.
- * Deforms only the top face of the 3D Water BoxGeometry to maintain solid straight vertical cross-sections on the floating island.
- * @param {THREE.Mesh} waterMesh - The 3D water box mesh
- * @param {number} elapsedTime - The elapsed clock time
+ * @param {THREE.Mesh} waterMesh
+ * @param {number} elapsedTime
  */
 export function animateWater(waterMesh, elapsedTime) {
   if (!waterMesh || !waterMesh.geometry) return;
@@ -64,7 +62,7 @@ export function animateWater(waterMesh, elapsedTime) {
   const posAttr = geom.attributes.position;
   const count = posAttr.count;
 
-  const flowSpeed = 1.5; // Downstream velocity along Z-axis (longitudinal)
+  const flowSpeed = 1.5;
 
   if (!geom.userData.originalY) {
     geom.userData.originalY = new Float32Array(count);
@@ -80,8 +78,6 @@ export function animateWater(waterMesh, elapsedTime) {
     const y = originalY[i];
     const z = posAttr.getZ(i);
 
-    // In 3D BoxGeometry, the height is along local Y (1.4 units tall).
-    // The top face vertices reside at local Y = +0.7.
     if (y > 0.6) {
       const wave = Math.sin(x * 1.2 + (z - elapsedTime * flowSpeed) * 0.8) * 0.07 +
                    Math.cos((z - elapsedTime * flowSpeed * 1.4) * 1.2) * 0.04;
@@ -94,11 +90,11 @@ export function animateWater(waterMesh, elapsedTime) {
 }
 
 /**
- * Updates boat bobbing and smooth transition lerps for all actor and boat meshes.
+ * Updates boat bobbing, smooth transition lerps, and kayak paddle rowing animation.
  * @param {number} delta - Frame delta time in seconds
  * @param {number} elapsedTime - Total elapsed clock time
  * @param {THREE.Mesh} boatMesh - The boat/kayak mesh
- * @param {Object} actorMeshes - Dictionary of actor meshes { man, fox, sheep1, sheep2 }
+ * @param {Object} actorMeshes - Dictionary of actor meshes
  * @param {GameState} gameState - The headless state machine
  */
 export function updateAnimations(delta, elapsedTime, boatMesh, actorMeshes, gameState) {
@@ -111,21 +107,45 @@ export function updateAnimations(delta, elapsedTime, boatMesh, actorMeshes, game
   const boatSpeed = SPEED.BOAT;
   boatMesh.position.x += (targetDockX - boatMesh.position.x) * boatSpeed * delta;
 
-  // 2. Kayak Micro-Bobbing (Sine wave math on water surface)
-  // Only apply bobbing if the boat is close to its target dock or gently moving.
-  // When rotated 90 degrees (aligned with Z-axis), bobPitch (pitching along the kayak length)
-  // needs to affect rotation.x, and bobRoll (side-to-side rolling) should affect rotation.z.
+  // 2. Kayak Micro-Bobbing
   const bobY = POSITIONS.BOAT_DOCK_LEFT.y + Math.sin(elapsedTime * 2.2) * 0.022;
-  const bobPitch = Math.sin(elapsedTime * 1.6) * 0.012; // Pitching along kayak length (local X, global Z)
-  const bobRoll = Math.cos(elapsedTime * 1.3) * 0.016;  // Side-to-side roll (local Z, global X)
+  const bobPitch = Math.sin(elapsedTime * 1.6) * 0.012;
+  const bobRoll = Math.cos(elapsedTime * 1.3) * 0.016;
 
   boatMesh.position.y = bobY;
 
-  // Since the kayak mesh has a default rotation of y = Math.PI / 2:
-  // Local pitch is around Z-axis of unrotated mesh, now corresponds to X-axis rotation globally.
-  // Local roll is around X-axis of unrotated mesh, now corresponds to Z-axis rotation globally.
   boatMesh.rotation.z = bobRoll;
   boatMesh.rotation.x = bobPitch;
+
+  // 2b. Kayak Paddle Rowing Animation
+  const paddle = boatMesh.getObjectByName('paddle');
+  if (paddle) {
+    const isTransiting = Math.abs(boatMesh.position.x - targetDockX) > 0.01;
+
+    if (boatMesh.userData.rowingIntensity === undefined) {
+      boatMesh.userData.rowingIntensity = 0.0;
+    }
+
+    if (isTransiting) {
+      // Lerp intensity up to 1.0 when moving
+      boatMesh.userData.rowingIntensity = THREE.MathUtils.lerp(boatMesh.userData.rowingIntensity, 1.0, 5.0 * delta);
+    } else {
+      // Lerp intensity down to 0.0 when stopped/docked
+      boatMesh.userData.rowingIntensity = THREE.MathUtils.lerp(boatMesh.userData.rowingIntensity, 0.0, 5.0 * delta);
+    }
+
+    const intensity = boatMesh.userData.rowingIntensity;
+
+    // Beautiful kayak rowing stroke motion (Pitch back-and-forth, Roll side-to-side)
+    const rowSpeed = 9.0;
+    const pitchVal = Math.sin(elapsedTime * rowSpeed) * 0.35;
+    const rollVal = Math.cos(elapsedTime * rowSpeed) * 0.5;
+
+    // Linearly interpolate the paddle's rotation between neutral (x=0, z=0) and rowing values
+    paddle.rotation.x = THREE.MathUtils.lerp(0, pitchVal, intensity);
+    paddle.rotation.z = THREE.MathUtils.lerp(0, rollVal, intensity);
+    paddle.rotation.y = 0.15; // Maintain default horizontal slant
+  }
 
   // 3. Actors Position Updates and Hop Animations
   const actors = Object.keys(actorMeshes);
@@ -137,15 +157,12 @@ export function updateAnimations(delta, elapsedTime, boatMesh, actorMeshes, game
     const currentLocation = gameState.actorPositions[actor];
     const animState = actorAnims[actor];
 
-    // Detect state changes to trigger a "hop" animation
-    // Update shake timer if active
     if (animState.shakeTime > 0) {
       animState.shakeTime -= delta;
       if (animState.shakeTime < 0) animState.shakeTime = 0;
     }
 
     if (currentLocation !== animState.prevLocation) {
-      // Store current physical world position as the animation start position
       mesh.getWorldPosition(animState.startPos);
       animState.startRotY = mesh.rotation.y;
       animState.progress = 0.0;
@@ -153,21 +170,17 @@ export function updateAnimations(delta, elapsedTime, boatMesh, actorMeshes, game
       animState.prevLocation = currentLocation;
     }
 
-    // Get final target world coordinate for this actor
     let targetX = 0, targetY = 0, targetZ = 0;
     let targetRotY = 0;
     const rotationOffset = mesh.userData.rotationOffset || 0;
 
     if (currentLocation === 'boat') {
-      // Position inside the boat (relative to boat's current position)
-      // Shepherd (man) takes seat 1. Others take seat 2.
       const seatOffset = actor === 'man' ? BOAT_SEATS.seat1 : BOAT_SEATS.seat2;
       targetX = boatMesh.position.x + seatOffset.x;
       targetY = boatMesh.position.y + seatOffset.y;
       targetZ = boatMesh.position.z + seatOffset.z;
-      targetRotY = actor === 'man' ? 0 : Math.PI; // Face forward/backward along kayak's Z-axis
+      targetRotY = actor === 'man' ? 0 : Math.PI;
     } else {
-      // Position on the respective land bank
       const bankPos = getBankPosition(actor, currentLocation);
       targetX = bankPos.x;
       targetY = bankPos.y;
@@ -175,44 +188,36 @@ export function updateAnimations(delta, elapsedTime, boatMesh, actorMeshes, game
       targetRotY = (currentLocation === 'left' ? 0 : Math.PI) + rotationOffset;
     }
 
-    // Lazily capture the original base scale of the actor mesh to avoid overwriting visual differences
     const baseScaleX = mesh.userData.baseScaleX || (mesh.userData.baseScaleX = mesh.scale.x);
     const baseScaleY = mesh.userData.baseScaleY || (mesh.userData.baseScaleY = mesh.scale.y);
     const baseScaleZ = mesh.userData.baseScaleZ || (mesh.userData.baseScaleZ = mesh.scale.z);
 
     if (animState.animating) {
-      // Glides are much faster than standard boarding hops
       const speedMult = animState.isGliding ? 10.0 : SPEED.ANIMATION;
       animState.progress += delta * speedMult;
       const t = Math.min(animState.progress, 1.0);
 
-      // Linear interpolation for X and Z
       const currentX = THREE.MathUtils.lerp(animState.startPos.x, targetX, t);
       const currentZ = THREE.MathUtils.lerp(animState.startPos.z, targetZ, t);
 
       let currentY;
       if (animState.isGliding) {
-        // Fast, direct linear glide without jump arc or squash/stretch
         currentY = THREE.MathUtils.lerp(animState.startPos.y, targetY, t);
         mesh.scale.set(baseScaleX, baseScaleY, baseScaleZ);
         mesh.rotation.set(0, THREE.MathUtils.lerp(animState.startRotY || 0, targetRotY, t), 0);
       } else {
-        // Parabolic arc for Y (the vertical hop)
-        const hopHeight = 1.1; // Max height of the jump
+        const hopHeight = 1.1;
         currentY = THREE.MathUtils.lerp(animState.startPos.y, targetY, t) + Math.sin(t * Math.PI) * hopHeight;
 
-        // Squash and stretch scale deformation:
-        // - Stretch in mid-air (t < 0.82): Y expands, X/Z contract
-        // - Squash on impact landing (t >= 0.82): Y contracts, X/Z expand
         let scaleYMult = 1.0;
         if (t < 0.82) {
           const midAirT = t / 0.82;
-          scaleYMult = 1.0 + Math.sin(midAirT * Math.PI) * 0.16; // Up to 1.16x stretching
+          scaleYMult = 1.0 + Math.sin(midAirT * Math.PI) * 0.16;
         } else {
           const landingT = (t - 0.82) / 0.18;
-          scaleYMult = 1.0 - Math.sin(landingT * Math.PI) * 0.16; // Down to 0.84x squashing
+          scaleYMult = 1.0 - Math.sin(landingT * Math.PI) * 0.16;
         }
-        const scaleXZMult = 2.0 - scaleYMult; // Inversely scale to preserve volume
+        const scaleXZMult = 2.0 - scaleYMult;
 
         mesh.scale.set(
           baseScaleX * scaleXZMult,
@@ -220,7 +225,6 @@ export function updateAnimations(delta, elapsedTime, boatMesh, actorMeshes, game
           baseScaleZ * scaleXZMult
         );
 
-        // Smoothly interpolate to target rotation and add a playful spin in the middle
         mesh.rotation.set(0, THREE.MathUtils.lerp(animState.startRotY || 0, targetRotY, t) + Math.sin(t * Math.PI) * Math.PI * 2, 0);
       }
 
@@ -233,24 +237,19 @@ export function updateAnimations(delta, elapsedTime, boatMesh, actorMeshes, game
         mesh.rotation.set(0, targetRotY, 0);
       }
     } else {
-      // No active animation, lock position and scale to exact targets
       mesh.position.set(targetX, targetY, targetZ);
       mesh.rotation.set(0, targetRotY, 0);
       mesh.scale.set(baseScaleX, baseScaleY, baseScaleZ);
 
-      // Apply shake head-wobble if active
       if (animState.shakeTime > 0) {
         mesh.rotation.y = targetRotY + Math.sin(elapsedTime * 40) * 0.25;
       }
 
-      // Apply game over visual cues (raging/tilting fox & spinning distress sheep)
       if (gameOverState.active) {
         if (actor === 'fox') {
-          // Tilt back on hind legs
           mesh.rotation.z = 0.5 + Math.sin(elapsedTime * 10) * 0.08;
           mesh.position.y = targetY + 0.15;
         } else if (actor === gameOverState.eatenSheep) {
-          // Distressed rapid spin on Y-axis and high speed hopping jitter
           mesh.rotation.y = targetRotY + elapsedTime * 15.0;
           mesh.position.y = targetY + Math.abs(Math.sin(elapsedTime * 20)) * 0.25;
         }
@@ -272,20 +271,17 @@ export function resetAnimations() {
 }
 
 /**
- * Setup keyboard event listeners for Developer Demo Mode and hidden 'D' key toggle.
- * Allows testing boat transit and loading/unloading of individual actors.
+ * Setup keyboard event listeners for Developer Demo Mode.
  * @param {GameState} gameState - The game state instance
- * @param {Function} onStateChanged - Callback triggered on successful actions to refresh overlays
+ * @param {Function} onStateChanged - Callback
  */
 export function setupKeyboardControls(gameState, onStateChanged) {
-  // Always set devPanelVisible to false initially as requested
   window.devPanelVisible = false;
 
   console.log('[Animation] Key listeners loaded:');
   console.log(' - Press "D" to toggle Developer Demo Controls panel & activate hotkeys');
 
   window.addEventListener('keydown', (e) => {
-    // Hidden toggle: D key toggles the dev controls panel
     if (e.code === 'KeyD') {
       e.preventDefault();
       window.devPanelVisible = !window.devPanelVisible;
@@ -296,7 +292,6 @@ export function setupKeyboardControls(gameState, onStateChanged) {
       return;
     }
 
-    // Keyboard shortcuts ONLY work when the panel is visible
     if (!window.devPanelVisible) return;
 
     let changed = false;
