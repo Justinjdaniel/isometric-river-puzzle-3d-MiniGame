@@ -232,16 +232,30 @@ export function setupScene(container) {
     const height = window.innerHeight || 1;
     const newAspect = width / height;
 
-    camera.left = -d * newAspect;
-    camera.right = d * newAspect;
-    camera.top = d;
-    camera.bottom = -d;
+    if (newAspect >= 1.2) {
+      // Landscape/wide viewports: Scale horizontally, keep vertical fixed
+      camera.left = -d * newAspect;
+      camera.right = d * newAspect;
+      camera.top = d;
+      camera.bottom = -d;
+    } else {
+      // Portrait/narrow viewports: Clamp horizontal frustum to reference aspect (1.2) to prevent clipping
+      const refAspect = 1.2;
+      camera.left = -d * refAspect;
+      camera.right = d * refAspect;
+      // Scale vertical frustum proportionally to fit the viewport vertically
+      camera.top = d * (refAspect / newAspect);
+      camera.bottom = -d * (refAspect / newAspect);
+    }
     camera.updateProjectionMatrix();
 
     renderer.setSize(width, height);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
   };
   window.addEventListener('resize', onResize);
+
+  // Invoke onResize immediately to apply correct aspect ratio rules before the first render
+  onResize();
 
   return {
     scene,
