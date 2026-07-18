@@ -147,7 +147,7 @@ function ensureUIShell() {
       <button class="mobile-nav-btn glass-panel" id="mobile-stats-btn" title="View Stats">
         📊 Stats
       </button>
-      <button class="mobile-nav-btn glass-panel" id="mobile-settings-btn" title="Open Settings">
+      <button class="mobile-nav-btn glass-panel" id="mobile-settings-btn" title="Open Settings" aria-label="Open Settings Dialog">
         ⚙️
       </button>
     </div>
