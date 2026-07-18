@@ -2,6 +2,12 @@
   "version": "2.0.0",
   "tasks": [
     {
+      "type": "shell",
+      "label": "git: resolve-pr-conflicts",
+      "command": "git add . && git commit -m \"Resolve merge conflicts and finalize branch state\" && git push origin jules-5632931132150823526-d9b7c48c",
+      "problemMatcher": []
+    },
+    {
       "type": "npm",
       "script": "dev",
       "label": "pnpm: dev",
